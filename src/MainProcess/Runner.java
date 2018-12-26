@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Runner extends Thread {
 
+    /*
     public Orchestration orch;
 
     public Runner(Orchestration curr) throws Exception{
@@ -46,5 +47,5 @@ public class Runner extends Thread {
 
         }
     }
-
+*/
 }

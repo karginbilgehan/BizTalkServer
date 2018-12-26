@@ -18,8 +18,6 @@ public class requestApprove implements Serializable{
     @XmlElement(name = "relativeId", required = true)
     protected  Integer relativeId;
 
-
-
     public String getUserApprove() {
         return userApprove;
     }

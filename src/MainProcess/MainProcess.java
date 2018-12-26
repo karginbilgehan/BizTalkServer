@@ -3,6 +3,28 @@ package MainProcess;
 import DB.*;
 
 public class MainProcess {
+    private static DBHandler dbHandler = new DBHandler();
+
+    public static void main(String[] args) {
+        Publish.main(null);
+/*
+        try {
+            Orchestration orchestration = dbHandler.getOrchestration();
+//            System.out.println(orchestration.getStatus());
+            if (orchestration.getId() != 0) {
+                int currentJobID = orchestration.getStartJobID();
+                Job currentJob = dbHandler.getJob(currentJobID);
+                System.out.println(currentJobID);
+            }
+        } catch (Exception e) {
+            // TODO: log basacak.
+            System.out.println(String.format("*** An error occured while getting orchestration from DB: %s ***", e));
+        }
+*/
+    }
+
+  /*
+
     public static void finalUpdate(Orchestration curr) throws Exception {
         DBHandler tmp = new DBHandler();
         tmp.updateOrchestration(curr.getId(), "Status", curr.getStatus());
@@ -106,4 +128,6 @@ public class MainProcess {
             }
         }
     }
+
+    */
 }
