@@ -80,4 +80,14 @@ public class Orchestration {
     public void setUpdateDateTime(String update) throws ParseException {
         this.UpdateDateTime = dateFormat.parse(update);
     }
+    public Date getUpdateDateTime_Date() {
+
+        return InsertDateTime;
+    }
+
+    public Date getInsertDateTime_Date() {
+
+        return UpdateDateTime;
+    }
+
 }

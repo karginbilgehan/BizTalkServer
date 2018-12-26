@@ -13,6 +13,7 @@ public class OrchestrationService implements IOrchestrationService {
 
     private DBHandler dbHandler = new DBHandler();
 
+
     /**
      * Introduce an orchestration.
      * @param value Object that contains orchestration information.
@@ -24,6 +25,7 @@ public class OrchestrationService implements IOrchestrationService {
     public String addOrchestration(OrchestrationRequest value, List<JobRequest> jobRequests, List<RuleRequest> ruleRequests) {
         List<Integer> JobIdList = new ArrayList<>();
         List<Integer> RuleIdList = new ArrayList<>();
+
 
         //End nodes
         JobIdList.add(0);

@@ -115,6 +115,7 @@ public class Job {
         return date;
     }
 
+
     public Date getUpdateDateTime_Date() {
 
         return updateDateTime;
@@ -133,6 +134,8 @@ public class Job {
 
         this.updateDateTime = this.dateFormat.parse(update);
     }
+
+
 
 
 }

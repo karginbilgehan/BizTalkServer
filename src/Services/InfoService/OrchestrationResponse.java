@@ -1,3 +1,4 @@
+package Services.InfoService;
 
 import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;

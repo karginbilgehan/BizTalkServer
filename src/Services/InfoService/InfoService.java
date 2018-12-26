@@ -8,19 +8,20 @@ import DB.Rule;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import javax.xml.bind.annotation.XmlElement;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Set;
 
 @WebService(serviceName = "InfoServicex")
 public class InfoService {
 
-      @WebMethod
-    @XmlElement(name ="getJob")
-    public JobResponse getJob(Integer jobId) throws Exception{
+    @WebMethod
+    @XmlElement(name = "getJob")
+    public JobResponse getJob(Integer jobId) throws Exception {
 
-        DBHandler handler =new DBHandler();
-        Job job =handler.getJob(jobId.intValue());
-        JobResponse info =new JobResponse();
+        DBHandler handler = new DBHandler();
+        Job job = handler.getJob(jobId.intValue());
+        JobResponse info = new JobResponse();
         info.setDescription(job.getDescription());
         info.setDestination(job.getDestination());
         info.setFileUrl(job.getFileUrl());
@@ -30,55 +31,50 @@ public class InfoService {
         info.setRelatives(job.getRelatives());
         info.setRuleId(job.getRuleId());
         info.setStatus(job.getStatus());
-         info.setUpdateDateTime(job.getUpdateDateTime_Date());
-        
+        info.setUpdateDateTime(job.getUpdateDateTime_Date());
         return info;
     }
-      
+
     @WebMethod
-    @XmlElement(name ="getOrchestration")
-    public OrchestrationResponseList getOrchestration(Integer ownerId) throws Exception{
-    
-        DBHandler handler =new DBHandler();
-        ArrayList<Orchestration> orc =handler.getOrchestration(ownerId.intValue());
-        ArrayList<OrchestrationResponse> orcList =new ArrayList<>();
-        for(Orchestration temp : orc){
-            OrchestrationResponse res =new OrchestrationResponse();
+    @XmlElement(name = "getOrchestration")
+    public ArrayList<OrchestrationResponse> getOrchestration(Integer ownerId) throws Exception {
+
+        DBHandler handler = new DBHandler();
+        Set<Orchestration> orc = handler.getOrchestration(ownerId.intValue());
+        ArrayList<OrchestrationResponse> orcList = new ArrayList<>();
+
+        for (Orchestration temp : orc) {
+            OrchestrationResponse res = new OrchestrationResponse();
             res.setId(temp.getId());
-            //res.setInsertDateTime(temp.getInsertDateTime());
+            res.setInsertDateTime(temp.getInsertDateTime_Date());
             res.setOwnerID(temp.getOwnerID());
             res.setStartJobID(temp.getStartJobID());
             res.setStatus(temp.getStatus());
-          //  res.setUpdateDateTime(temp.getUpdateDateTime());
+            res.setUpdateDateTime(temp.getUpdateDateTime_Date());
             orcList.add(res);
         }
-        
-        OrchestrationResponseList list =new OrchestrationResponseList();
-        list.setOrcList(orcList);
-        list.setOwnerID(ownerId);
-        return list;
+
+        return orcList;
     }
-    
-    
+
+
     @WebMethod
-    @XmlElement(name ="getRule")
-    public RuleResponse getRule(Integer ruleId) throws Exception{
-    
-        DBHandler handler =new DBHandler();
-        Rule rule =handler.getRule(ruleId.intValue());
-        RuleResponse info =new RuleResponse();
-        
+    @XmlElement(name = "getRule")
+    public RuleResponse getRule(Integer ruleId) throws Exception {
+
+        DBHandler handler = new DBHandler();
+        Rule rule = handler.getRule(ruleId.intValue());
+        RuleResponse info = new RuleResponse();
+
         info.setId(rule.getId());
         info.setNoEdge(rule.getNoEdge());
         info.setOwnerID(rule.getOwnerID());
         rule.setQuery(rule.getQuery());
         rule.setRelativeResults(rule.getRelativeResults());
         rule.setYesEdge(rule.getYesEdge());
-        
+
         return info;
     }
-
-
 
 
 }
