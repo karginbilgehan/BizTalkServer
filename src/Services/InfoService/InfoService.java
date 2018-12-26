@@ -10,7 +10,7 @@ import javax.jws.WebService;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.Set;
 
-@WebService(serviceName = "InfoService")
+@WebService(serviceName = "InfoServicex")
 public class InfoService {
 
  @WebMethod
