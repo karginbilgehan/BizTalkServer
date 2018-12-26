@@ -10,7 +10,7 @@ public class DBHandler {
 
     private String dbUrl = "jdbc:mysql://localhost:3306/biztalk?useUnicode=true&characterEncoding=utf-8";
     private String userName = "root";
-    private String password = "123";
+    private String password = "";
     private String driver = "com.mysql.jdbc.Driver";
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
