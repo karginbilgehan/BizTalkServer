@@ -1,4 +1,4 @@
-package com.server.approve;
+package Services.Approve;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

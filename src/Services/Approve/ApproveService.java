@@ -1,4 +1,4 @@
-package com.server.approve;
+package Services.Approve;
 
 import DB.DBHandler;
 import DB.Job;
@@ -17,7 +17,7 @@ public class ApproveService {
   Integer jobId;
 
   @WebMethod()
-  public String updateUserApprove(@XmlElement(required = true, nillable = false) com.server.approve.requestApprove ra){
+  public String updateUserApprove(@XmlElement(required = true, nillable = false) requestApprove ra){
 
     //guiden gelen degerler.
     userApp = ra.getUserApprove();
@@ -43,7 +43,7 @@ public class ApproveService {
 
     //Bize gelen stringi listeye atip indexini buldum.
     // | ve bosluklari yok sayarak
-    List<String> reList = Arrays.asList(relatives.split("\\s*\\|\\s*"));
+    List<String> reList = Arrays.asList(relatives.split("\\s*\\,\\s*"));
     //try catch eklenecek
     int index = reList.indexOf(relativeId);
     //job tablosundan ruleid ye ulasip oradan rule tablosuna erisiyoruz.

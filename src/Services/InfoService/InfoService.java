@@ -35,12 +35,38 @@ public class InfoService {
         return info;
     }
 
+
+    @WebMethod
+    @XmlElement(name = "getJobFromOwner")
+    public ArrayList<JobResponse> getJobsFromOwner(Integer ownerId) throws Exception {
+
+        DBHandler handler = new DBHandler();
+        Set<Job> jobSet = handler.getJobSet(ownerId);
+        ArrayList<JobResponse> jobList = new ArrayList<>();
+
+        for(Job job : jobSet){
+            JobResponse info = new JobResponse();
+            info.setDescription(job.getDescription());
+            info.setDestination(job.getDestination());
+            info.setFileUrl(job.getFileUrl());
+            info.setId(job.getId());
+            info.setInsertDateTime(job.getInsertDateTime_Date());
+            info.setOwner(job.getOwner());
+            info.setRelatives(job.getRelatives());
+            info.setRuleId(job.getRuleId());
+            info.setStatus(job.getStatus());
+            info.setUpdateDateTime(job.getUpdateDateTime_Date());
+        }
+
+        return jobList;
+    }
+
     @WebMethod
     @XmlElement(name = "getOrchestration")
     public ArrayList<OrchestrationResponse> getOrchestration(Integer ownerId) throws Exception {
 
         DBHandler handler = new DBHandler();
-        Set<Orchestration> orc = handler.getOrchestration(0);
+        Set<Orchestration> orc = handler.getOrchestration(ownerId);
         ArrayList<OrchestrationResponse> orcList = new ArrayList<>();
 
         for (Orchestration temp : orc) {
