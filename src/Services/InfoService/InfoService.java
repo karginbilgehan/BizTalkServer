@@ -2,10 +2,13 @@ package Services.InfoService;
 
 import DB.DBHandler;
 import DB.Job;
+import DB.Orchestration;
+import DB.Rule;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import javax.xml.bind.annotation.XmlElement;
+import java.util.Set;
 
 @WebService(serviceName = "InfoService")
 public class InfoService {
