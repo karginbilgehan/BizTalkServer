@@ -1,5 +1,4 @@
 import DB.DBHandler;
-import DB.Job;
 import Services.Approve.ApproveService;
 import Services.InfoService.InfoService;
 import Services.Orchestration.OrchestrationService;
@@ -29,10 +28,9 @@ public class Publish {
 
     public static void main(String[] argv) throws Exception {
 
-      //  startInfoService();
+        startInfoService();
         startOrchestrationService();
-       // startApproveService();
-
+        startApproveService();
 
         DBHandler dbHandler = new DBHandler();
         dbHandler.getOrchestration(0);
