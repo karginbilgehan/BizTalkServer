@@ -10,7 +10,8 @@ import javax.xml.bind.annotation.XmlElement;
 @WebService(serviceName = "InfoService")
 public class InfoService {
 
- @WebMethod
+   @WebMethod
+    @XmlElement(name ="getJob")
     public Job getJob(Integer jobId) throws Exception{
 
         DBHandler handler =new DBHandler();
@@ -20,6 +21,7 @@ public class InfoService {
     }
     
     @WebMethod
+    @XmlElement(name ="getOrchestration")
     public Set<Orchestration> getOrchestration(Integer ownerId) throws Exception{
     
         DBHandler handler =new DBHandler();
@@ -29,6 +31,7 @@ public class InfoService {
     }
     
     @WebMethod
+    @XmlElement(name ="getRule")
     public Rule getRule(Integer ruleId) throws Exception{
     
         DBHandler handler =new DBHandler();
@@ -36,6 +39,7 @@ public class InfoService {
         
         return rule;
     }
+
 
 
 }
