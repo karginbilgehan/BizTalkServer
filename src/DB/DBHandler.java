@@ -355,7 +355,7 @@ public class DBHandler {
         orchestration.setId(rs.getInt("OrchestrationId"));
         orchestration.setOwnerID(rs.getInt("OrchestrationOwner"));
         orchestration.setStatus(rs.getInt("Status"));
-        orchestration.setStartJobID(rs.getInt("JobId"));
+        orchestration.setStartJobID(rs.getInt("StartingJobId"));
         orchestration.setInsertDateTime(rs.getString("InsertDateTime"));
         orchestration.setUpdateDateTime(rs.getString("UpdateDateTime"));
     }

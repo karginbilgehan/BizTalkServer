@@ -40,7 +40,7 @@ public class InfoService {
     public ArrayList<OrchestrationResponse> getOrchestration(Integer ownerId) throws Exception {
 
         DBHandler handler = new DBHandler();
-        Set<Orchestration> orc = handler.getOrchestration(ownerId.intValue());
+        Set<Orchestration> orc = handler.getOrchestration(0);
         ArrayList<OrchestrationResponse> orcList = new ArrayList<>();
 
         for (Orchestration temp : orc) {
