@@ -1,11 +1,15 @@
 package DB;
 
+import com.mysql.jdbc.JDBC4PreparedStatement;
+
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Date;
+
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
 
 public class DBHandler {
 
@@ -86,10 +90,19 @@ public class DBHandler {
         preparedStmt.setInt(7,job.getRuleId());
         preparedStmt.setString(8,job.getInsertDateTime());
         preparedStmt.setString(9,job.getUpdateDateTime());
+        String query = ((JDBC4PreparedStatement)preparedStmt).asSql();
+        System.out.println("-->" + query);
+        preparedStmt.executeUpdate(query,RETURN_GENERATED_KEYS);
+        ResultSet rs = preparedStmt.getGeneratedKeys();
 
-        PreparedStatement preparedStmt2 = conn.prepareStatement("SELECT JobId FROM jobs " +
+        System.out.println("Eklendi index: " + (rs.next() ? rs.getInt(1) : -1));
+
+
+       /* PreparedStatement preparedStmt2 = conn.prepareStatement("SELECT JobId FROM jobs " +
                 "WHERE JobId = (SELECT MAX(JobId) FROM jobs)");
-        int result = -1;
+*/
+
+      /*  int result = -1;
 
         if (!preparedStmt.execute()) {
 
@@ -99,11 +112,13 @@ public class DBHandler {
 
             closeResultSet(rs);
         }
+        */
 
         closePreparedStatement(preparedStmt);
-        closePreparedStatement(preparedStmt2);
+        //closePreparedStatement(preparedStmt2);
         closeConnection(conn);
-        return result;
+        //return result;
+        return 1;
     }
 
     public boolean updateJob(int JobId, String columnName, int value) throws Exception {
