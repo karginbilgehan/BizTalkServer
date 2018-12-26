@@ -22,7 +22,7 @@ public class Publish {
     public static void main(String[] argv) throws Exception {
 
         startInfoService();
-        //startOrchestrationService();
+        startOrchestrationService();
 
 
         DBHandler dbHandler = new DBHandler();

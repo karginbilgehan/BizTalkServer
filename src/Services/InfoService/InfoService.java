@@ -25,7 +25,7 @@ public class InfoService {
         info.setDestination(job.getDestination());
         info.setFileUrl(job.getFileUrl());
         info.setId(job.getId());
-      //  info.setInsertDateTime(job.getInsertDateTime());
+        info.setInsertDateTime(job.getInsertDateTime());
         info.setOwner(job.getOwner());
         info.setRelatives(job.getRelatives());
         info.setRuleId(job.getRuleId());

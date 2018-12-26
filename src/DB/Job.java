@@ -115,6 +115,20 @@ public class Job {
         return date;
     }
 
+    public Date getUpdateDateTime_Date() {
+
+        return updateDateTime;
+    }
+
+    public Date getInsertDateTime_Date() {
+
+        return insertDateTime;
+    }
+
+
+
+
+
     public void setUpdateDateTime(String update) throws ParseException {
 
         this.updateDateTime = this.dateFormat.parse(update);
