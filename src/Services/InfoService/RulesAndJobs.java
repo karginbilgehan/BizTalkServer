@@ -7,8 +7,8 @@ import java.util.ArrayList;
 
 public class RulesAndJobs extends OrchestrationResponse {
 
-    private ArrayList<Rule> rules;
-    private ArrayList<Job> jobs;
+    private ArrayList<Rule> rules = new ArrayList<Rule>();
+    private ArrayList<Job> jobs = new ArrayList<Job>();
 
     public void addJob(Job job){
         jobs.add(job);
@@ -18,4 +18,11 @@ public class RulesAndJobs extends OrchestrationResponse {
         rules.add(rule);
     }
 
+    public ArrayList<Rule> getRules() {
+        return rules;
+    }
+
+    public ArrayList<Job> getJobs() {
+        return jobs;
+    }
 }

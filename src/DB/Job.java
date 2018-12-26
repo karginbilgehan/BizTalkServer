@@ -126,17 +126,9 @@ public class Job {
         return insertDateTime;
     }
 
-
-
-
-
     public void setUpdateDateTime(String update) throws ParseException {
 
         this.updateDateTime = this.dateFormat.parse(update);
     }
-
-
-
-
 }
 
