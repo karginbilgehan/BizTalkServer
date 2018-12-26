@@ -10,14 +10,21 @@ import javax.xml.bind.annotation.XmlElement;
 @WebService(serviceName = "InfoService")
 public class InfoService {
 
-   @WebMethod
+    @WebMethod
     @XmlElement(name ="getJob")
-    public Job getJob(Integer jobId) throws Exception{
+    public ServerToGUI getJob(Integer jobId) throws Exception{
 
         DBHandler handler =new DBHandler();
         Job job =handler.getJob(jobId.intValue());
+        ServerToGUI info =new ServerToGUI();
+        info.setJobId(jobId);
+        info.setJobDescription(job.getDescription());
+        info.setJobOwner(job.getOwner());
+        info.setRelatives(job.getRelatives());
+        info.setStatus(job.getStatus());
         
-        return job;
+        
+        return info;
     }
     
     @WebMethod
