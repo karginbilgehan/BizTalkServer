@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Date;
 
 public class DBHandler {
 
@@ -12,6 +13,8 @@ public class DBHandler {
     private String userName = "root";
     private String password = "";
     private String driver = "com.mysql.jdbc.Driver";
+
+
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public Connection getConnection() throws Exception {
@@ -102,7 +105,7 @@ public class DBHandler {
         return result;
     }
 
-    public boolean UpdateJob(int JobId, String columnName, int value) throws Exception {
+    public boolean updateJob(int JobId, String columnName, int value) throws Exception {
 
         Connection conn = getConnection();
         String sql = "UPDATE jobs SET " + columnName + " = " + value + " WHERE JobId = "+ JobId;
@@ -110,26 +113,28 @@ public class DBHandler {
 
 
         boolean bool = preparedStmt.execute();
+        updateJob(JobId,new Date());
         closePreparedStatement(preparedStmt);
         closeConnection(conn);
 
         return bool;
     }
 
-    public boolean UpdateJob(int JobId, String columnName, String value) throws Exception {
+    public boolean updateJob(int JobId, String columnName, String value) throws Exception {
 
         Connection conn = getConnection();
         String sql = "UPDATE jobs SET " + columnName + " = " + "'"+ value + "'" + " WHERE JobId = "+ JobId;
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
         boolean bool = preparedStmt.execute();
+        updateJob(JobId,new Date());
         closePreparedStatement(preparedStmt);
         closeConnection(conn);
 
         return bool;
     }
 
-    public boolean UpdateJob(int JobId, String columnName, Date value) throws Exception {
+    public boolean updateJob(int JobId, Date value) throws Exception {
 
         String date = dateFormat.format(value);
 
@@ -185,7 +190,6 @@ public class DBHandler {
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
         boolean result = preparedStmt.execute();
-
         closePreparedStatement(preparedStmt);
         closeConnection(conn);
 
@@ -200,12 +204,12 @@ public class DBHandler {
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
         boolean result = preparedStmt.execute();
-
         closePreparedStatement(preparedStmt);
         closeConnection(conn);
 
         return result;
     }
+
 
     public int insertRule(Rule rule) throws Exception {
 
@@ -289,7 +293,7 @@ public class DBHandler {
         int result = -1;
         Connection conn = getConnection();
         PreparedStatement preparedStmt = conn.prepareStatement(" INSERT INTO orchestrations " +
-                "(OrchestrationOwner, Status, JobId, InsertDateTime,UpdateDateTime)" +
+                "(OrchestrationOwner, Status, StartingJobId, InsertDateTime,UpdateDateTime)" +
                 " values (?, ?, ?, ?, ?)");
 
         preparedStmt.setInt(1, orchestration.getOwnerID());
@@ -324,6 +328,7 @@ public class DBHandler {
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
         result = preparedStmt.execute();
+        updateOrchestration(orchestrationid,new Date());
 
         closePreparedStatement(preparedStmt);
         closeConnection(conn);

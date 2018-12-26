@@ -61,7 +61,7 @@ public class OrchestrationService implements IOrchestrationService {
 
             int ruleId = RuleIdList.get(workOn.getRuleId() - 1);
             try {
-                dbHandler.UpdateJob(jobId, "RuleId", ruleId);
+                dbHandler.updateJob(jobId, "RuleId", ruleId);
             } catch (Exception e) {
                 System.err.println("Error to access given id: " + ruleId);
                 System.err.println(e);
@@ -110,7 +110,7 @@ public class OrchestrationService implements IOrchestrationService {
      */
     private int addRule(RuleRequest value) {
         int dbRuleId;
-        Rule actualRule = new Rule(0, value.ownerID, value.query, value.yesEdge, value.noEdge, value.relativeResults);
+        Rule actualRule = new Rule(value.ownerID, value.query, value.yesEdge, value.noEdge, value.relativeResults);
         try {
             dbRuleId = dbHandler.insertRule(actualRule);
         } catch (Exception e) {

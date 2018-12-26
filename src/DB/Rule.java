@@ -13,8 +13,7 @@ public class Rule {
 
     }
 
-    public Rule(int id, int ownerID, String query, int yesEdge, int noEdge, String relativeResults) {
-        this.id = id;
+    public Rule(int ownerID, String query, int yesEdge, int noEdge, String relativeResults) {
         this.ownerID = ownerID;
         this.query = query;
         this.yesEdge = yesEdge;
