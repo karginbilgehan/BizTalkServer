@@ -21,7 +21,7 @@ public class Publish {
 
     public static void main(String[] argv) throws Exception {
 
-       // startInfoService();
+        startInfoService();
         //startOrchestrationService();
 
 

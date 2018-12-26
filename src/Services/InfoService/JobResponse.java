@@ -1,3 +1,4 @@
+package Services.InfoService;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -6,8 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name ="ServerToGUI", namespace="Server")
 public class JobResponse {
-    
-    
+
     protected Integer jobId;
     protected Integer jobOwner;
     protected String jobDescription;

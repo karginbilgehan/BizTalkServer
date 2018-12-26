@@ -8,14 +8,15 @@ import DB.Rule;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import javax.xml.bind.annotation.XmlElement;
+import java.util.ArrayList;
 import java.util.Set;
 
 @WebService(serviceName = "InfoServicex")
 public class InfoService {
 
     @WebMethod
-    @XmlElement(name ="getJob")
-    public JobResponse getJob(Integer jobId) throws Exception{
+    @XmlElement(name ="Job")
+    public ArrayList<JobResponse> getJob(Integer jobId) throws Exception{
 
         DBHandler handler =new DBHandler();
         Job job =handler.getJob(jobId.intValue());
@@ -25,9 +26,11 @@ public class InfoService {
         info.setJobOwner(job.getOwner());
         info.setRelatives(job.getRelatives());
         info.setStatus(job.getStatus());
-        
-        
-        return info;
+
+        ArrayList<JobResponse> list = new ArrayList();
+        list.add(info);
+        list.add(info);
+        return list;
     }
     
     @WebMethod
