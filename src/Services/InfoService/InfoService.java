@@ -12,11 +12,11 @@ public class InfoService {
 
     @WebMethod
     @XmlElement(name ="getJob")
-    public ServerToGUI getJob(Integer jobId) throws Exception{
+    public JobResponse getJob(Integer jobId) throws Exception{
 
         DBHandler handler =new DBHandler();
         Job job =handler.getJob(jobId.intValue());
-        ServerToGUI info =new ServerToGUI();
+        JobResponse info =new JobResponse();
         info.setJobId(jobId);
         info.setJobDescription(job.getDescription());
         info.setJobOwner(job.getOwner());
