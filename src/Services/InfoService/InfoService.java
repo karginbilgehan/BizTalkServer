@@ -14,44 +14,55 @@ import java.util.Set;
 @WebService(serviceName = "InfoServicex")
 public class InfoService {
 
-    @WebMethod
-    @XmlElement(name ="Job")
-    public ArrayList<JobResponse> getJob(Integer jobId) throws Exception{
+      @WebMethod
+    @XmlElement(name ="getJob")
+    public JobResponse getJob(Integer jobId) throws Exception{
 
         DBHandler handler =new DBHandler();
         Job job =handler.getJob(jobId.intValue());
         JobResponse info =new JobResponse();
-        info.setJobId(jobId);
-        info.setJobDescription(job.getDescription());
-        info.setJobOwner(job.getOwner());
+        info.setDescription(job.getDescription());
+        info.setDestination(job.getDestination());
+        info.setFileUrl(job.getFileUrl());
+        info.setId(job.getId());
+      //  info.setInsertDateTime(job.getInsertDateTime());
+        info.setOwner(job.getOwner());
         info.setRelatives(job.getRelatives());
+        info.setRuleId(job.getRuleId());
         info.setStatus(job.getStatus());
-
-        ArrayList<JobResponse> list = new ArrayList();
-        list.add(info);
-        list.add(info);
-        return list;
+     //   info.setUpdateDateTime(job.getUpdateDateTime());
+        
+        return info;
     }
     
     @WebMethod
     @XmlElement(name ="getOrchestration")
-    public Set<Orchestration> getOrchestration(Integer ownerId) throws Exception{
+    public ArrayList<Orchestration> getOrchestration(Integer ownerId) throws Exception{
     
         DBHandler handler =new DBHandler();
-        Set<Orchestration> orc =handler.getOrchestration(ownerId.intValue());
+        ArrayList<Orchestration> orc =handler.getOrchestration(ownerId.intValue());
 
         return orc;
     }
     
     @WebMethod
     @XmlElement(name ="getRule")
-    public Rule getRule(Integer ruleId) throws Exception{
+    public RuleResponse getRule(Integer ruleId) throws Exception{
     
         DBHandler handler =new DBHandler();
         Rule rule =handler.getRule(ruleId.intValue());
+        RuleResponse info =new RuleResponse();
         
-        return rule;
+        info.setId(rule.getId());
+        info.setNoEdge(rule.getNoEdge());
+        info.setOwnerID(rule.getOwnerID());
+        rule.setQuery(rule.getQuery());
+        rule.setRelativeResults(rule.getRelativeResults());
+        rule.setYesEdge(rule.getYesEdge());
+        
+        return info;
     }
+
 
 
 
