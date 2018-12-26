@@ -16,7 +16,7 @@ public class Job {
     private Date insertDateTime;
     private Date updateDateTime;
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public Job(){
 

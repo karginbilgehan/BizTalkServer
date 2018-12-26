@@ -219,8 +219,6 @@ public class DBHandler {
                 "(RuleOwner, RuleQuery, YesEdge, NoEdge,RelativeResult)" +
                 " values (?, ?, ?, ?, ?)");
 
-        PreparedStatement preparedStatement2 = conn.prepareStatement("Select * FROM rules " +
-                "WHERE RuleId =(SELECT MAX(RuleId) FROM rules)");
 
         preparedStmt.setInt(1, rule.getOwnerID());
         preparedStmt.setString(2, rule.getQuery());

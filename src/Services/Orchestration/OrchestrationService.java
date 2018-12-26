@@ -11,12 +11,10 @@ import Services.Orchestration.Requests.*;
         serviceName = "OrchestrationService")
 public class OrchestrationService implements IOrchestrationService {
 
-
     private DBHandler dbHandler = new DBHandler();
 
     /**
      * Introduce an orchestration.
-     *
      * @param value Object that contains orchestration information.
      * @param jobRequests  List that contains jobRequests of orchestration.
      * @param ruleRequests List that contains ruleRequests of orchestration.
@@ -34,7 +32,7 @@ public class OrchestrationService implements IOrchestrationService {
         //Saving jobRequests to the database
         // and adding their generated id's from db to JobIdList.
         for (JobRequest temp : jobRequests)
-            JobIdList.add(addJob(temp));
+            JobIdList.add(addJobSub(temp));
 
         // Saving ruleRequests to db.
         // creating edges between ruleRequests declared from gui.
@@ -43,7 +41,7 @@ public class OrchestrationService implements IOrchestrationService {
             temp.yesEdge = JobIdList.get(temp.yesEdge);
             temp.noEdge = JobIdList.get(temp.noEdge);
 
-            RuleIdList.add(addRule(temp));
+            RuleIdList.add(addRuleSub(temp));
         }
 
         //Updating all jobRequests with their associated ruleRequests with db ids.
@@ -56,7 +54,7 @@ public class OrchestrationService implements IOrchestrationService {
             } catch (Exception e){
                 System.err.println("Error to access given id: " + jobId);
                 System.err.println(e);
-                return String.format("*** Error to access given id: %d***", jobId);
+                return String.format("*** Error to access given id (job): %d***", jobId);
             }
 
             int ruleId = RuleIdList.get(workOn.getRuleId() - 1);
@@ -65,12 +63,12 @@ public class OrchestrationService implements IOrchestrationService {
             } catch (Exception e) {
                 System.err.println("Error to access given id: " + ruleId);
                 System.err.println(e);
-                return String.format("*** Error to access given id: %d***", ruleId);
+                return String.format("*** Error to access given id (rule): %d***", ruleId);
             }
         }
 
         // Set the start job's id.
-        Orchestration actualOrch = new Orchestration(value.ownerID, 0, JobIdList.get(0));
+        Orchestration actualOrch = new Orchestration(value.ownerID, 0, JobIdList.get(1));
 
         // Adding orchestration value to db.
         try {
@@ -83,15 +81,34 @@ public class OrchestrationService implements IOrchestrationService {
     }
 
     /**
-     * Add given job to database.
+     * Add a job.
      *
+     * @param job Job to be added.
+     * @return Message.
+     */
+    @Override
+    public String addJob(JobRequest job) {
+        return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
+    }
+
+    /**
+     * Add a rule
+     * @param rule Rule to be added.
+     * @return Message.
+     */
+    @Override
+    public String addRule(RuleRequest rule) {
+        return addRuleSub(rule) != -1 ? "Rule has been added successfully!" : "*** An occurred while adding rule ***";
+    }
+
+    /**
+     * Add given job to database.
      * @param value DB.JobRequest to be added to database.
      * @return If added, returns job id which is got from db, otherwise -1 to indicate an error.
      */
-    // Bu method eklenen job ın id sini döndürmeli ancak dbden öyle bi bilgi alamıyorum.
-    private int addJob(JobRequest value) {
+    private int addJobSub(JobRequest value) {
         int dbJobId;
-        Job actualJob = new Job(value.owner, value.description, value.destination, value.fileUrl, value.relatives, 0, 0);
+        Job actualJob = new Job(value.owner, value.description, value.destination, value.fileUrl, value.relatives, 0, value.ruleId);
         try {
             dbJobId = dbHandler.insertJob(actualJob);
         } catch (Exception e) {
@@ -108,7 +125,7 @@ public class OrchestrationService implements IOrchestrationService {
      * @param value DB.RuleRequest to be added to database.
      * @return If added, returns rule id which is got from db, otherwise -1 to indicate an error.
      */
-    private int addRule(RuleRequest value) {
+    private int addRuleSub(RuleRequest value) {
         int dbRuleId;
         Rule actualRule = new Rule(value.ownerID, value.query, value.yesEdge, value.noEdge, value.relativeResults);
         try {
