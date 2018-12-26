@@ -25,12 +25,12 @@ public class InfoService {
         info.setDestination(job.getDestination());
         info.setFileUrl(job.getFileUrl());
         info.setId(job.getId());
-        info.setInsertDateTime(job.getInsertDateTime());
+        info.setInsertDateTime(job.getInsertDateTime_Date());
         info.setOwner(job.getOwner());
         info.setRelatives(job.getRelatives());
         info.setRuleId(job.getRuleId());
         info.setStatus(job.getStatus());
-     //   info.setUpdateDateTime(job.getUpdateDateTime());
+         info.setUpdateDateTime(job.getUpdateDateTime_Date());
         
         return info;
     }
@@ -40,9 +40,10 @@ public class InfoService {
     public ArrayList<Orchestration> getOrchestration(Integer ownerId) throws Exception{
     
         DBHandler handler =new DBHandler();
-        ArrayList<Orchestration> orc =handler.getOrchestration(ownerId.intValue());
+      // ArrayList<Orchestration> orc = handler.getOrchestration(ownerId.intValue());
 
-        return orc;
+
+        return null;
     }
     
     @WebMethod
