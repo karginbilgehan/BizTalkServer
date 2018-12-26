@@ -1,5 +1,5 @@
-﻿# Host: 127.0.0.1  (Version 5.5.5-10.1.37-MariaDB)
-# Date: 2018-12-25 23:50:05
+﻿# Host: 127.0.0.1  (Version 5.5.5-10.1.36-MariaDB)
+# Date: 2018-12-26 14:32:48
 # Generator: MySQL-Front 6.1  (Build 1.26)
 
 
@@ -11,20 +11,16 @@ DROP TABLE IF EXISTS `jobs`;
 CREATE TABLE `jobs` (
   `JobId` int(11) NOT NULL AUTO_INCREMENT,
   `JobOwner` int(11) NOT NULL DEFAULT '0',
-  `Destination` text NOT NULL,
-  `FileUrl` text NOT NULL,
-  `Relatives` text NOT NULL,
+  `Destination` text COLLATE utf8_turkish_ci NOT NULL,
+  `FileUrl` text COLLATE utf8_turkish_ci NOT NULL,
+  `Relatives` text COLLATE utf8_turkish_ci NOT NULL,
   `Status` int(11) NOT NULL DEFAULT '0',
   `RuleId` int(11) NOT NULL DEFAULT '0',
   `InsertDateTime` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `UpdateDateTime` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `Description` text NOT NULL,
+  `Description` text COLLATE utf8_turkish_ci NOT NULL,
   PRIMARY KEY (`JobId`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-#
-# Data for table "jobs"
-#
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
 
 
 #
