@@ -2,6 +2,7 @@ package Services.Orchestration;
 
 import javax.jws.WebService;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import DB.*;
@@ -11,8 +12,10 @@ import Services.Orchestration.Requests.*;
         serviceName = "OrchestrationService")
 public class OrchestrationService implements IOrchestrationService {
 
+    /**
+     * For accessing database
+     */
     private DBHandler dbHandler = new DBHandler();
-
 
     /**
      * Introduce an orchestration.
@@ -23,9 +26,11 @@ public class OrchestrationService implements IOrchestrationService {
      */
     @Override
     public String addOrchestration(OrchestrationRequest value, List<JobRequest> jobRequests, List<RuleRequest> ruleRequests) {
+        if (value.id == 0)
+            return "*** DB.OrchestrationRequest id could not be 0! ***";
+
         List<Integer> JobIdList = new ArrayList<>();
         List<Integer> RuleIdList = new ArrayList<>();
-
 
         //End nodes
         JobIdList.add(0);
@@ -55,16 +60,14 @@ public class OrchestrationService implements IOrchestrationService {
                 workOn = dbHandler.getJob(jobId);
             } catch (Exception e){
                 System.err.println("Error to access given id: " + jobId);
-                System.err.println(e);
                 return String.format("*** Error to access given id (job): %d***", jobId);
             }
 
-            int ruleId = RuleIdList.get(workOn.getRuleId() - 1);
+            int ruleId = RuleIdList.get(workOn.getRuleId());
             try {
                 dbHandler.updateJob(jobId, "RuleId", ruleId);
             } catch (Exception e) {
                 System.err.println("Error to access given id: " + ruleId);
-                System.err.println(e);
                 return String.format("*** Error to access given id (rule): %d***", ruleId);
             }
         }
@@ -83,24 +86,33 @@ public class OrchestrationService implements IOrchestrationService {
     }
 
     /**
-     * Add a job.
+     * Add job and rule. (Rule is optional.)
      *
-     * @param job Job to be added.
-     * @return Message.
-     */
-    @Override
-    public String addJob(JobRequest job) {
-        return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
-    }
-
-    /**
-     * Add a rule
+     * @param job  Job to be added.
      * @param rule Rule to be added.
-     * @return Message.
+     * @return Message
      */
     @Override
-    public String addRule(RuleRequest rule) {
-        return addRuleSub(rule) != -1 ? "Rule has been added successfully!" : "*** An occurred while adding rule ***";
+    public String addJobRule(JobRequest job, RuleRequest rule) {
+        if (job.id == 0)
+            return "*** An occurred while adding job ***";
+        if (job.ruleId == 0)
+            return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
+
+        String relativeRes = job.relatives;
+        List<String> resList = Arrays.asList(relativeRes.split("\\s*,\\s*"));
+        StringBuilder strBuilder = new StringBuilder();
+        for(int i = 0; i < resList.size();i++){
+            if(i == resList.size() -1){
+                strBuilder.append("X");
+            } else {
+                strBuilder.append("X,");
+            }
+        }
+        rule.relativeResults = strBuilder.toString();
+        job.ruleId =  addRuleSub(rule);
+
+        return addJobSub(job) != -1 ? "Job has been added with rule successfully!" : "*** An occurred while adding job with rule ***";
     }
 
     /**
@@ -110,6 +122,7 @@ public class OrchestrationService implements IOrchestrationService {
      */
     private int addJobSub(JobRequest value) {
         int dbJobId;
+
         Job actualJob = new Job(value.owner, value.description, value.destination, value.fileUrl, value.relatives, 0, value.ruleId);
         try {
             dbJobId = dbHandler.insertJob(actualJob);
@@ -129,6 +142,7 @@ public class OrchestrationService implements IOrchestrationService {
      */
     private int addRuleSub(RuleRequest value) {
         int dbRuleId;
+
         Rule actualRule = new Rule(value.ownerID, value.query, value.yesEdge, value.noEdge, value.relativeResults);
         try {
             dbRuleId = dbHandler.insertRule(actualRule);

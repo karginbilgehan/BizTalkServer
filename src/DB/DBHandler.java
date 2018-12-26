@@ -13,7 +13,7 @@ import static java.sql.Statement.RETURN_GENERATED_KEYS;
 
 public class DBHandler {
 
-    private String dbUrl = "jdbc:mysql://localhost:3306/biztalk?useUnicode=true&characterEncoding=utf-8";
+    private String dbUrl = "jdbc:mysql://localhost:3306/biztalkdb?useUnicode=true&characterEncoding=utf-8";
   //  private String dbUrl = "jdbc:mysql://51.158.72.164:3306/biztalk?useUnicode=true&characterEncoding=utf-8&useSSL=false";
     private String userName = "root";
    // private String password = "dd6dfe6b993b05f305b8ac3d6773cebd7bd7af9f";

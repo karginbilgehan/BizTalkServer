@@ -29,23 +29,15 @@ public interface IOrchestrationService {
                             @WebParam(name = "jobList") @XmlElement(required = true) List<JobRequest> jobRequests,
                             @WebParam(name = "ruleList") @XmlElement(required = true) List<RuleRequest> ruleRequests);
 
-
     /**
-     * Add a job.
+     * Add job and rule. (Rule is optional.)
      * @param job Job to be added.
-     * @return Message.
-     */
-    @WebMethod(action = "add_job", operationName = "addJob")
-    @WebResult(name = "message")
-    String addJob(@WebParam(name = "job") @XmlElement(required = true) JobRequest job);
-
-    /**
-     * Add a rule.
      * @param rule Rule to be added.
-     * @return Message.
+     * @return Message
      */
-    @WebMethod(action = "add_rule", operationName = "addRule")
+    @WebMethod(action = "add_job_rule", operationName = "addJobRule")
     @WebResult(name = "message")
-    String addRule(@WebParam(name = "rule") @XmlElement(required = true) RuleRequest rule);
+    String addJobRule(@WebParam(name = "job") @XmlElement(required = true) JobRequest job,
+                      @WebParam(name = "rule") RuleRequest rule);
 
 }
