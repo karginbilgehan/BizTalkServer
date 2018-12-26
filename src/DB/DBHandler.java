@@ -20,6 +20,7 @@ public class DBHandler {
     private String driver = "com.mysql.jdbc.Driver";
 
 
+
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public Connection getConnection() throws Exception {
@@ -90,35 +91,19 @@ public class DBHandler {
         preparedStmt.setInt(7,job.getRuleId());
         preparedStmt.setString(8,job.getInsertDateTime());
         preparedStmt.setString(9,job.getUpdateDateTime());
+
         String query = ((JDBC4PreparedStatement)preparedStmt).asSql();
-        System.out.println("-->" + query);
         preparedStmt.executeUpdate(query,RETURN_GENERATED_KEYS);
         ResultSet rs = preparedStmt.getGeneratedKeys();
 
-        System.out.println("Eklendi index: " + (rs.next() ? rs.getInt(1) : -1));
+        int result = -1;
 
-
-       /* PreparedStatement preparedStmt2 = conn.prepareStatement("SELECT JobId FROM jobs " +
-                "WHERE JobId = (SELECT MAX(JobId) FROM jobs)");
-*/
-
-      /*  int result = -1;
-
-        if (!preparedStmt.execute()) {
-
-            ResultSet rs = preparedStmt2.executeQuery();
-            if (rs.next())
-                result = rs.getInt("JobId");
-
-            closeResultSet(rs);
-        }
-        */
+        if(rs.next())
+            result = rs.getInt(1);
 
         closePreparedStatement(preparedStmt);
-        //closePreparedStatement(preparedStmt2);
         closeConnection(conn);
-        //return result;
-        return 1;
+        return result;
     }
 
     public boolean updateJob(int JobId, String columnName, int value) throws Exception {
@@ -243,21 +228,20 @@ public class DBHandler {
         preparedStmt.setInt(4, rule.getNoEdge());
         preparedStmt.setString(5, rule.getRelativeResults());
 
+        String query = ((JDBC4PreparedStatement)preparedStmt).asSql();
+        preparedStmt.executeUpdate(query,RETURN_GENERATED_KEYS);
+        ResultSet rs = preparedStmt.getGeneratedKeys();
 
-        ResultSet rs = null ;
         int result = -1;
-        if (!preparedStmt.execute()) {
-            rs = preparedStatement2.executeQuery();
-            if (rs.next())
-                result = rs.getInt("RuleId");
-        }
+
+        if (rs.next())
+            result = rs.getInt(1);
 
         closePreparedStatement(preparedStmt);
         closeResultSet(rs);
         closeConnection(conn);
 
         return result;
-
     }
 
     //******************************//
@@ -318,18 +302,15 @@ public class DBHandler {
         preparedStmt.setString(4, orchestration.getInsertDateTime());
         preparedStmt.setString(5, orchestration.getUpdateDateTime());
 
-        PreparedStatement preparedStmt2 = conn.prepareStatement("SELECT OrchestrationId FROM orchestrations " +
-                "WHERE OrchestrationId = (SELECT MAX(OrchestrationId) FROM orchestrations)");
+        String query = ((JDBC4PreparedStatement)preparedStmt).asSql();
+        preparedStmt.executeUpdate(query,RETURN_GENERATED_KEYS);
+        ResultSet rs = preparedStmt.getGeneratedKeys();
 
+        if (rs.next())
+            result = rs.getInt(1);
 
-        if(!preparedStmt.execute()) {
-            ResultSet rs = preparedStmt2.executeQuery();
-            if (rs.next())
-                result = rs.getInt("OrchestrationId");
-            closeResultSet(rs);
-        }
+        closeResultSet(rs);
         closePreparedStatement(preparedStmt);
-        closePreparedStatement(preparedStmt2);
         closeConnection(conn);
 
         return result;
