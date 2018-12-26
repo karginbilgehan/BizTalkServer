@@ -34,17 +34,31 @@ public class InfoService {
         
         return info;
     }
-    
+      
     @WebMethod
     @XmlElement(name ="getOrchestration")
-    public ArrayList<Orchestration> getOrchestration(Integer ownerId) throws Exception{
+    public OrchestrationResponseList getOrchestration(Integer ownerId) throws Exception{
     
         DBHandler handler =new DBHandler();
-      // ArrayList<Orchestration> orc = handler.getOrchestration(ownerId.intValue());
-
-
-        return null;
+        ArrayList<Orchestration> orc =handler.getOrchestration(ownerId.intValue());
+        ArrayList<OrchestrationResponse> orcList =new ArrayList<>();
+        for(Orchestration temp : orc){
+            OrchestrationResponse res =new OrchestrationResponse();
+            res.setId(temp.getId());
+            //res.setInsertDateTime(temp.getInsertDateTime());
+            res.setOwnerID(temp.getOwnerID());
+            res.setStartJobID(temp.getStartJobID());
+            res.setStatus(temp.getStatus());
+          //  res.setUpdateDateTime(temp.getUpdateDateTime());
+            orcList.add(res);
+        }
+        
+        OrchestrationResponseList list =new OrchestrationResponseList();
+        list.setOrcList(orcList);
+        list.setOwnerID(ownerId);
+        return list;
     }
+    
     
     @WebMethod
     @XmlElement(name ="getRule")
