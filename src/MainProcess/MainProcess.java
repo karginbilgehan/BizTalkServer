@@ -5,6 +5,16 @@ import Services.StatusCodes;
 
 import java.util.Arrays;
 import java.util.List;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import org.apache.commons.lang3.time.StopWatch;
 
 public class MainProcess {
@@ -12,8 +22,50 @@ public class MainProcess {
 
     private static final int _5min = 300000;
 
-    private static void work(Job job) {
+    private static void work(Job job) throws IOException {
         System.out.println(String.format("Job: %d islendi", job.getId())); // job islendi.
+        String result = "Hello, world, from " + job.getOwner();
+        String fileName=null;
+        String fileUrl = job.getFileUrl();
+        String[] destinations = job.getDestination().split(",");
+        if(job.getDestination().length()>2){
+            URL url = new URL(fileUrl);
+            fileName =  fileUrl.substring(fileUrl.lastIndexOf('/')+1, fileUrl.length());
+            InputStream in = url.openStream();
+            Files.copy(in, Paths.get("IncomingFiles\\"+fileName), StandardCopyOption.REPLACE_EXISTING);
+        }
+        for (String dest :
+                destinations) {
+            String ftpUrl = "ftp://%s:%s@%s/%s";
+            String host = dest + ":21" ;
+            String user = "demo";
+            String pass = "123";
+            String filePath = Paths.get("IncomingFiles\\"+fileName).toString();
+            System.out.println("local file url:" + filePath);
+
+            ftpUrl = String.format(ftpUrl, user, pass, host, fileName);
+            System.out.println("Upload URL: " + ftpUrl);
+
+            try {
+                URL url = new URL(ftpUrl);
+                URLConnection conn = url.openConnection();
+                OutputStream outputStream = conn.getOutputStream();
+                FileInputStream inputStream = new FileInputStream(filePath);
+
+                byte[] buffer = new byte[4096];
+                int bytesRead = -1;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                inputStream.close();
+                outputStream.close();
+
+                System.out.println("File uploaded");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     private static char callBRE(Rule rule) {
