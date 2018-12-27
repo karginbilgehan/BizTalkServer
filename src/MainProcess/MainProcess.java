@@ -34,8 +34,7 @@ public class MainProcess {
             InputStream in = url.openStream();
             Files.copy(in, Paths.get("IncomingFiles\\"+fileName), StandardCopyOption.REPLACE_EXISTING);
         }
-        for (String dest :
-                destinations) {
+        for (String dest : destinations) {
             String ftpUrl = "ftp://%s:%s@%s/%s";
             String host = dest + ":21" ;
             String user = "demo";
@@ -135,7 +134,7 @@ public class MainProcess {
     public static void main(String[] args) throws Exception {
         Publish.main(null);
 
-       /* while (true) {
+       while (true) {
             Orchestration orchestration = dbHandler.getOrchestration();
             if (orchestration.getId() != 0) {
                 // new thread
@@ -144,6 +143,6 @@ public class MainProcess {
                 System.out.println("No orchestration waiting!");
             }
             Thread.sleep(50);
-        }*/
+       }
     }
 }
