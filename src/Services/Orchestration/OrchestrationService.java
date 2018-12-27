@@ -25,7 +25,8 @@ public class OrchestrationService implements IOrchestrationService {
      * @return Message.
      */
     @Override
-    public String addOrchestration(OrchestrationRequest value, List<JobRequest> jobRequests, List<RuleRequest> ruleRequests) {
+    public String addOrchestration(OrchestrationRequest value, List<JobRequest> jobRequests,
+                                   List<RuleRequest> ruleRequests) {
         if (value.id == 0)
             return "*** DB.OrchestrationRequest id could not be 0! ***";
 
@@ -47,7 +48,6 @@ public class OrchestrationService implements IOrchestrationService {
         for (RuleRequest temp : ruleRequests) {
             temp.yesEdge = JobIdList.get(temp.yesEdge);
             temp.noEdge = JobIdList.get(temp.noEdge);
-
             RuleIdList.add(addRuleSub(temp));
         }
 
@@ -65,7 +65,11 @@ public class OrchestrationService implements IOrchestrationService {
 
             int ruleId = RuleIdList.get(workOn.getRuleId());
             try {
+                // Update ruleId of the job.
                 dbHandler.updateJob(jobId, "RuleId", ruleId);
+
+                // Update the relative result of the rule.
+                dbHandler.updateRule(ruleId, "RelativeResult", makeXRelativeResult(workOn.getRelatives()));
             } catch (Exception e) {
                 System.err.println("Error to access given id: " + ruleId);
                 return String.format("*** Error to access given id (rule): %d***", ruleId);
@@ -99,17 +103,7 @@ public class OrchestrationService implements IOrchestrationService {
         if (job.ruleId == 0)
             return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
 
-        String relativeRes = job.relatives;
-        List<String> resList = Arrays.asList(relativeRes.split("\\s*,\\s*"));
-        StringBuilder strBuilder = new StringBuilder();
-        for(int i = 0; i < resList.size();i++){
-            if(i == resList.size() -1){
-                strBuilder.append("X");
-            } else {
-                strBuilder.append("X,");
-            }
-        }
-        rule.relativeResults = strBuilder.toString();
+        rule.relativeResults = makeXRelativeResult(job.relatives);
         job.ruleId =  addRuleSub(rule);
 
         return addJobSub(job) != -1 ? "Job has been added with rule successfully!" : "*** An occurred while adding job with rule ***";
@@ -154,4 +148,22 @@ public class OrchestrationService implements IOrchestrationService {
         return dbRuleId;
     }
 
+    /**
+     * Make X relative result.
+     *
+     * @param relatives Relatives.
+     * @return X
+     */
+    private String makeXRelativeResult(String relatives) {
+        List<String> resList = Arrays.asList(relatives.split("\\s*,\\s*"));
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < resList.size();i++) {
+            if(i == resList.size() - 1) {
+                strBuilder.append("X");
+            } else {
+                strBuilder.append("X,");
+            }
+        }
+        return strBuilder.toString();
+    }
 }

@@ -17,7 +17,7 @@ public class ApproveService {
   private Integer jobId;
 
   @WebMethod()
-  public String updateUserApprove(@XmlElement(required = true, nillable = false)  requestApprove ra){
+  public String updateUserApprove(@XmlElement(required = true, nillable = false) requestApprove ra){
 
     //guiden gelen degerler.
     userApp = ra.getUserApprove();
