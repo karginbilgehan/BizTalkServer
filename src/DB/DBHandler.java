@@ -112,6 +112,7 @@ public class DBHandler {
         return jobs;
     }
 
+
     public int insertJob(Job job)throws Exception{
 
         Connection conn = getConnection();
@@ -403,7 +404,6 @@ public class DBHandler {
 
         preparedStmt.setInt(1,ownerID);
         ResultSet rs = preparedStmt.executeQuery();
-        RulesAndJobs rulesAndJobs = new RulesAndJobs();
         ArrayList<RulesAndJobs> rulesAndJobsArrayList = new ArrayList<>();
 
         while(rs.next()) {
@@ -412,7 +412,9 @@ public class DBHandler {
             preparedStmt2.setInt(1,rs.getInt("StartingJobId"));
             ResultSet rs2 = preparedStmt2.executeQuery();
 
+            RulesAndJobs rulesAndJobs = new RulesAndJobs();
             while(rs2.next()){
+
                 Job job = new Job();
                 job.setId(rs2.getInt("JobId"));
                 job.setOwner(rs2.getInt("JobOwner"));
