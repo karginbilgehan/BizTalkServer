@@ -10,6 +10,7 @@ import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @WebService(serviceName = "InfoService")
@@ -97,4 +98,20 @@ public class InfoService {
         return info;
     }
 
+    @WebMethod
+    @XmlElement(name = "get_job_and_rule_by_ownerID")
+    public List<RulesAndJobsResponse> getJobAndRuleByOwnerID(@WebParam(name = "ownerID") @XmlElement(required = true) int ownerID) {
+        try {
+            List<RulesAndJobs> rulesAndJobs = handler.getRulesAndJobs(ownerID);
+            List<RulesAndJobsResponse> rulesAndJobsResponses = new ArrayList<>();
+
+            for (RulesAndJobs r: rulesAndJobs) {
+                rulesAndJobsResponses.add(new RulesAndJobsResponse(r.getJobs(), r.getRules()));
+            }
+            return rulesAndJobsResponses;
+        } catch (Exception e) {
+            System.err.println("*** Rules and jobs could not get from DB ***");
+        }
+        return null;
+    }
 }

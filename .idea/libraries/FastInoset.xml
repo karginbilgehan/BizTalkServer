@@ -23,6 +23,7 @@
       <root url="jar://$PROJECT_DIR$/lib/streambuffer.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/woodstox-core-asl.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/mysql-connector-java-5.1.40.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-lang3-3.8.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

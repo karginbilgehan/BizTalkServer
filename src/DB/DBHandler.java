@@ -6,6 +6,7 @@ import com.mysql.jdbc.JDBC4PreparedStatement;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Date;
@@ -110,7 +111,6 @@ public class DBHandler {
 
         return jobs;
     }
-
 
     public int insertJob(Job job)throws Exception{
 
@@ -396,7 +396,7 @@ public class DBHandler {
         orchestration.setUpdateDateTime(rs.getString("UpdateDateTime"));
     }
 
-    public RulesAndJobs setRulesAndJobs(int ownerID) throws Exception {
+    public ArrayList<RulesAndJobs> getRulesAndJobs(int ownerID) throws Exception {
 
         Connection conn = getConnection();
         PreparedStatement preparedStmt = conn.prepareStatement("SELECT * FROM orchestrations WHERE OrchestrationOwner = ?");
@@ -404,8 +404,9 @@ public class DBHandler {
         preparedStmt.setInt(1,ownerID);
         ResultSet rs = preparedStmt.executeQuery();
         RulesAndJobs rulesAndJobs = new RulesAndJobs();
+        ArrayList<RulesAndJobs> rulesAndJobsArrayList = new ArrayList<>();
 
-        if(rs.next()) {
+        while(rs.next()) {
 
             PreparedStatement preparedStmt2 = conn.prepareStatement("SELECT * FROM jobs WHERE JobId = ?");
             preparedStmt2.setInt(1,rs.getInt("StartingJobId"));
@@ -445,14 +446,16 @@ public class DBHandler {
                     rs2 = preparedStmt4.executeQuery();
 
                 }
+
             }
+            rulesAndJobsArrayList.add(rulesAndJobs);
         }
 
         closePreparedStatement(preparedStmt);
         closeResultSet(rs);
         closeConnection(conn);
 
-        return  rulesAndJobs;
+        return  rulesAndJobsArrayList;
 
     }
 

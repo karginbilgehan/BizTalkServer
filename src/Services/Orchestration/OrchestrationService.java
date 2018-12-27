@@ -7,6 +7,7 @@ import java.util.List;
 
 import DB.*;
 import Services.Orchestration.Requests.*;
+import Services.StatusCodes;
 
 @WebService(endpointInterface = "Services.Orchestration.IOrchestrationService",
         serviceName = "OrchestrationService")
@@ -77,7 +78,7 @@ public class OrchestrationService implements IOrchestrationService {
         }
 
         // Set the start job's id.
-        Orchestration actualOrch = new Orchestration(value.ownerID, 0, JobIdList.get(1));
+        Orchestration actualOrch = new Orchestration(value.ownerID, StatusCodes.INITIAL, JobIdList.get(1));
 
         // Adding orchestration value to db.
         try {
