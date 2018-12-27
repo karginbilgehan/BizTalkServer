@@ -5,7 +5,7 @@ import DB.Rule;
 
 import java.util.ArrayList;
 
-public class RulesAndJobs extends OrchestrationResponse {
+public class RulesAndJobs  {
 
     private ArrayList<Rule> rules = new ArrayList<Rule>();
     private ArrayList<Job> jobs = new ArrayList<Job>();
