@@ -8,6 +8,7 @@ import java.util.List;
 import DB.*;
 import Services.Orchestration.Requests.*;
 import Services.StatusCodes;
+import com.sun.jmx.snmp.agent.SnmpUserDataFactory;
 
 @WebService(endpointInterface = "Services.Orchestration.IOrchestrationService",
         serviceName = "OrchestrationService")
@@ -101,12 +102,13 @@ public class OrchestrationService implements IOrchestrationService {
     public String addJobRule(JobRequest job, RuleRequest rule) {
         if (job.id == 0)
             return "*** An occurred while adding job ***";
-        if (job.ruleId == 0)
+        if (job.ruleId == 0) {
+            System.out.println("addJobRule" + job.id + " Hata burada");
             return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
+        }
 
         rule.relativeResults = makeXRelativeResult(job.relatives);
         job.ruleId =  addRuleSub(rule);
-
         return addJobSub(job) != -1 ? "Job has been added with rule successfully!" : "*** An occurred while adding job with rule ***";
     }
 
@@ -126,6 +128,7 @@ public class OrchestrationService implements IOrchestrationService {
             return -1;
         }
         actualJob.setId(dbJobId);
+        System.out.printf("addJobSub JobID: %d - RuleID: %d\n", value.id, value.ruleId);
         return dbJobId;
     }
 
@@ -146,6 +149,7 @@ public class OrchestrationService implements IOrchestrationService {
             return -1;
         }
         actualRule.setId(dbRuleId);
+        System.out.println("addRuleSub: " + value.id);
         return dbRuleId;
     }
 

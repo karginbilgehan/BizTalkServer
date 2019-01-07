@@ -16,11 +16,11 @@ import static java.sql.Statement.RETURN_GENERATED_KEYS;
 public class DBHandler {
 
     //private String dbUrl = "jdbc:mysql://localhost:3306/biztalk?useUnicode=true&characterEncoding=utf-8";
-    //  private String dbUrl = "jdbc:mysql://51.158.72.164:3306/biztalk?useUnicode=true&characterEncoding=utf-8&useSSL=false";
-
-    private String dbUrl = "jdbc:mysql://localhost:3306/biztalkdb";
+   //< private String dbUrl = "jdbc:mysql://51.158.72.164:3306/biztalk?useUnicode=true&characterEncoding=utf-8&useSSL=false";
+    String dbUrl = "jdbc:mysql://localhost:3306/biztalkdb";
     private String userName = "root";
-    // private String password = "dd6dfe6b993b05f305b8ac3d6773cebd7bd7af9f";
+    //private String password = "dd6dfe6b993b05f305b8ac3d6773cebd7bd7af9f";
+
     private String password = "";
     private String driver = "com.mysql.jdbc.Driver";
 
@@ -299,6 +299,34 @@ public class DBHandler {
         closeConnection(conn);
 
         return orchestration;
+    }
+
+    public Job getJob() throws Exception {
+
+        Connection conn = getConnection();
+        Job job = new Job();
+        PreparedStatement preparedStmt = conn.prepareStatement("SELECT * FROM jobs WHERE Status = -1 ORDER BY InsertDateTime");
+
+        ResultSet rs = preparedStmt.executeQuery();
+
+        if(rs.next()) {
+            job.setId(rs.getInt("JobId"));
+            job.setOwner(rs.getInt("JobOwner"));
+            job.setDescription(rs.getString("Description"));
+            job.setDestination(rs.getString("Destination"));
+            job.setFileUrl(rs.getString("FileUrl"));
+            job.setRelatives(rs.getString("Relatives"));
+            job.setStatus(rs.getInt("Status"));
+            job.setRuleId(rs.getInt("RuleId"));
+            job.setInsertDateTime(rs.getString("InsertDateTime"));
+            job.setUpdateDateTime(rs.getString("UpdateDateTime"));
+        }
+
+        closePreparedStatement(preparedStmt);
+        closeResultSet(rs);
+        closeConnection(conn);
+
+        return job;
     }
 
     public Set<Orchestration> getOrchestration(int OrchestrationOwner) throws Exception {

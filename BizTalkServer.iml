@@ -23,8 +23,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="FastInoset" level="project" />
+    <orderEntry type="library" name="cd.connect.common:connect-jersey-client:2.2" level="project" />
   </component>
-  <compilerArgs>
-  	<arg>--add-modules</arg><arg>java.xml.bind</arg>
-  </compilerArgs>
 </module>

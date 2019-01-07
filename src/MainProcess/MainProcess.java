@@ -3,78 +3,125 @@ package MainProcess;
 import DB.*;
 import Services.StatusCodes;
 
+import java.io.*;
+
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+
+import com.sun.jmx.snmp.Timestamp;
 import org.apache.commons.lang3.time.StopWatch;
 
 public class MainProcess {
     private static DBHandler dbHandler = new DBHandler();
 
-    private static final int _5min = 300000;
+    public static String createMessageFile(String message) throws IOException {
+        Date date = new Date();
+
+        long time = date.getTime();
+
+        long ts = System.currentTimeMillis() / 1000L;
+
+
+        try (PrintWriter out = new PrintWriter("temp/" + ts + ".message")) {
+            out.println(message);
+        }
+        return String.valueOf(ts);
+
+    }
+
 
     private static void work(Job job) throws IOException {
         System.out.println(String.format("Job: %d islendi", job.getId())); // job islendi.
         String result = "Hello, world, from " + job.getOwner();
-        String fileName=null;
+        String fileName = null;
         String fileUrl = job.getFileUrl();
         String[] destinations = job.getDestination().split(",");
-        if(job.getDestination().length()>2){
-            URL url = new URL(fileUrl);
-            fileName =  fileUrl.substring(fileUrl.lastIndexOf('/')+1, fileUrl.length());
-            InputStream in = url.openStream();
-            Files.copy(in, Paths.get("IncomingFiles\\"+fileName), StandardCopyOption.REPLACE_EXISTING);
-        }
+        String[] messages = job.getDescription().split("~");
+        int count = 0;
+        fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1, fileUrl.length());
+
         for (String dest : destinations) {
-            String ftpUrl = "ftp://%s:%s@%s/%s";
-            String host = dest + ":21" ;
-            String user = "demo";
+            dest = dest.replaceAll(" ", "");
+            String ftpUrlStart = "ftp://%s:%s@%s/%s";
+            String ftpUrl = null;
+            String host = dest + ":21";
+            String user = "BizTalk";
             String pass = "123";
-            String filePath = Paths.get("IncomingFiles\\"+fileName).toString();
+            // String filePath = Paths.get("IncomingFiles\\"+fileName).toString();
+            String filePath = job.getFileUrl();
             System.out.println("local file url:" + filePath);
 
-            ftpUrl = String.format(ftpUrl, user, pass, host, fileName);
+            ftpUrl = String.format(ftpUrlStart, user, pass, host, fileName);
             System.out.println("Upload URL: " + ftpUrl);
-
             try {
                 URL url = new URL(ftpUrl);
                 URLConnection conn = url.openConnection();
                 OutputStream outputStream = conn.getOutputStream();
-                FileInputStream inputStream = new FileInputStream(filePath);
+                //FileInputStream inputStream = new FileInputStream(filePath);
+                InputStream inputStream = new URL(filePath).openStream();
 
+
+                //Send main file
                 byte[] buffer = new byte[4096];
                 int bytesRead = -1;
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
+
                 }
 
+
+                //Send message info
+                String messageFile = createMessageFile(messages[count]);
+                String messagePath = Paths.get("temp\\"+messageFile+".message").toString();
+                System.out.println("local file url:" + messagePath);
+
+                String ftpUrlMessage = String.format(ftpUrlStart, user, pass, host,fileName+".message");
+                System.out.println("Upload URL: " + ftpUrlMessage);
+                url = new URL(ftpUrlMessage);
+                conn = url.openConnection();
+                OutputStream outputStreamMessage = conn.getOutputStream();
+                FileInputStream inputStreamMessage = new FileInputStream(messagePath);
+                buffer = new byte[4096];
+
+                while ((bytesRead = inputStreamMessage.read(buffer)) != -1) {
+
+                    outputStreamMessage.write(buffer, 0, bytesRead);
+
+                }
+                inputStreamMessage.close();
+                outputStreamMessage.close();
                 inputStream.close();
                 outputStream.close();
+
+                File deleteFile = new File(messagePath);
+                if(deleteFile.delete()){
+                    System.out.println("tmp/file.txt File deleted from Project root directory");
+                }else System.out.println("File tmp/file.txt doesn't exists in project root directory");
+
+
 
                 System.out.println("File uploaded");
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+            ++count;
         }
     }
 
-    private static char callBRE(Rule rule) {
-      /*  String relativeResults = rule.getRelativeResults();
+    private static char checkRule(Rule rule) {
+        String relativeResults = rule.getRelativeResults();
         List<String> resList = Arrays.asList(relativeResults.split("\\s*,\\s*"));
         if (resList.contains("X"))
             return 'X';
         if (resList.contains("F"))
             return 'F';
-            */
         return 'T';
     }
 
@@ -91,13 +138,9 @@ public class MainProcess {
 
                 // Jobun ruleu alinir.
                 Rule ruleOfCurrentJob = dbHandler.getRule(currentJob.getRuleId());
-                char responseOfBRE;
+                //char responseOfBRE = checkRule(ruleOfCurrentJob);
+                char responseOfBRE = 'T';
 
-                StopWatch sw = StopWatch.createStarted();
-                while ((responseOfBRE = callBRE(ruleOfCurrentJob)) == 'X' && sw.getTime() < _5min) {
-                    ruleOfCurrentJob = dbHandler.getRule(currentJob.getRuleId());
-                }
-                sw.stop();
                 if (responseOfBRE == 'T') {
                     work(currentJob);
                     dbHandler.updateJob(currentJobID, "Status", StatusCodes.SUCCESS);
@@ -131,18 +174,72 @@ public class MainProcess {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Publish.main(null);
+    public static Runnable singleJobExecution(){
+        DBHandler dbHandlerSingle = new DBHandler();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while(true){
+                    Job job = null;
+                    try {
+                        job = dbHandlerSingle.getJob();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (job.getId() != 0) {
+                        // new thread
+                        try {
+                            work(job);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        System.out.println("No single job waiting!");
+                    }
 
-       while (true) {
-            Orchestration orchestration = dbHandler.getOrchestration();
-            if (orchestration.getId() != 0) {
-                // new thread
-                orchestrationRun(orchestration);
-            } else {
-                System.out.println("No orchestration waiting!");
+                }
             }
-            Thread.sleep(50);
-       }
+        };
+        return runnable;
+    }
+
+    public static  Runnable orchestrationExecution() throws Exception{
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    Orchestration orchestration = null;
+                    try {
+                        orchestration = dbHandler.getOrchestration();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (orchestration.getId() != 0) {
+                        // new thread
+                        orchestrationRun(orchestration);
+                    } else {
+                        System.out.println("No orchestration waiting!");
+                    }
+
+                }
+            }
+        };
+        return runnable;
+    }
+
+    public static void main(String[] args) throws Exception {
+        try{
+            Thread jobThread = new Thread(singleJobExecution());
+            Thread orchThread = new Thread(orchestrationExecution());
+
+            orchThread.start();
+            jobThread.start();
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+        //  Publish.main(null);
+
+
     }
 }
