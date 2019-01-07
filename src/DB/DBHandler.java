@@ -426,7 +426,6 @@ public class DBHandler {
     }
 
     public ArrayList<RulesAndJobs> getRulesAndJobs(int ownerID) throws Exception {
-
         Connection conn = getConnection();
         PreparedStatement preparedStmt = conn.prepareStatement("SELECT * FROM orchestrations WHERE OrchestrationOwner = ?");
 

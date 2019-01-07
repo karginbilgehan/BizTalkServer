@@ -5,10 +5,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import BRE.BREClient;
+import BizTalkLog.Logger.BizLog;
+import BizTalkLog.Logger.LogLevel;
 import DB.*;
 import Services.Orchestration.Requests.*;
 import Services.StatusCodes;
 import com.sun.jmx.snmp.agent.SnmpUserDataFactory;
+import com.sun.org.apache.xpath.internal.operations.Or;
 
 @WebService(endpointInterface = "Services.Orchestration.IOrchestrationService",
         serviceName = "OrchestrationService")
@@ -29,8 +33,11 @@ public class OrchestrationService implements IOrchestrationService {
     @Override
     public String addOrchestration(OrchestrationRequest value, List<JobRequest> jobRequests,
                                    List<RuleRequest> ruleRequests) {
-        if (value.id == 0)
+        if (value.id == 0) {
+            BizLog.Log("1", String.valueOf(value.ownerID), LogLevel.ERROR,
+                    new Orchestration(value.ownerID, StatusCodes.ERROR, value.startJobID));
             return "*** DB.OrchestrationRequest id could not be 0! ***";
+        }
 
         List<Integer> JobIdList = new ArrayList<>();
         List<Integer> RuleIdList = new ArrayList<>();
@@ -53,6 +60,17 @@ public class OrchestrationService implements IOrchestrationService {
             RuleIdList.add(addRuleSub(temp));
         }
 
+        // Set the start job's id.
+        Orchestration actualOrch = new Orchestration(value.ownerID, StatusCodes.INITIAL, JobIdList.get(1));
+
+        // Adding orchestration value to db.
+        try {
+            actualOrch.setId(dbHandler.insertOrchestration(actualOrch));
+        } catch (Exception e) {
+            System.err.println("DB.OrchestrationRequest could not be introduced: " + e);
+            return "*** DB.OrchestrationRequest could not be introduced. ***";
+        }
+
         //Updating all jobRequests with their associated ruleRequests with db ids.
         for(int jobId : JobIdList){
             if (jobId == 0) continue;
@@ -66,28 +84,25 @@ public class OrchestrationService implements IOrchestrationService {
             }
 
             int ruleId = RuleIdList.get(workOn.getRuleId());
+            workOn.setRuleId(ruleId);
             try {
                 // Update ruleId of the job.
                 dbHandler.updateJob(jobId, "RuleId", ruleId);
 
                 // Update the relative result of the rule.
                 dbHandler.updateRule(ruleId, "RelativeResult", makeXRelativeResult(workOn.getRelatives()));
+
+                Rule rule = dbHandler.getRule(ruleId);
+
+                BizLog.Log("1", String.valueOf(value.ownerID), LogLevel.INFO, workOn, rule, actualOrch);
             } catch (Exception e) {
                 System.err.println("Error to access given id: " + ruleId);
                 return String.format("*** Error to access given id (rule): %d***", ruleId);
             }
+
+            //    public static void Log(String logID, String userID, LogLevel level, Job job, Rule rule, Orchestration orch)
         }
 
-        // Set the start job's id.
-        Orchestration actualOrch = new Orchestration(value.ownerID, StatusCodes.INITIAL, JobIdList.get(1));
-
-        // Adding orchestration value to db.
-        try {
-            dbHandler.insertOrchestration(actualOrch);
-        } catch (Exception e) {
-            System.err.println("DB.OrchestrationRequest could not be introduced: " + e);
-            return "*** DB.OrchestrationRequest could not be introduced. ***";
-        }
         return "DB.OrchestrationRequest has been introduced successfully!";
     }
 
@@ -109,6 +124,9 @@ public class OrchestrationService implements IOrchestrationService {
 
         rule.relativeResults = makeXRelativeResult(job.relatives);
         job.ruleId =  addRuleSub(rule);
+
+        BREClient.add(rule.query, rule.id, job.relatives);   // Return value kullanilmali. Return valuesu query formattan oturu hata verebilir.
+
         return addJobSub(job) != -1 ? "Job has been added with rule successfully!" : "*** An occurred while adding job with rule ***";
     }
 
@@ -144,6 +162,7 @@ public class OrchestrationService implements IOrchestrationService {
         Rule actualRule = new Rule(value.ownerID, value.query, value.yesEdge, value.noEdge, value.relativeResults);
         try {
             dbRuleId = dbHandler.insertRule(actualRule);
+
         } catch (Exception e) {
             System.out.println("DB.RuleRequest Db insert error: " + e);
             return -1;

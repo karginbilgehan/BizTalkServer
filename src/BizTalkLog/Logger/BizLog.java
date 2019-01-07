@@ -3,6 +3,7 @@ package BizTalkLog.Logger;
 import DB.Job;
 import DB.Orchestration;
 import DB.Rule;
+import Services.StatusCodes;
 
 import java.io.File;
 import java.io.IOException;
@@ -79,6 +80,22 @@ public class BizLog {
         orchQueue.add(entry);
         //when orch is ended,write it to specified orch file
         if(Status.values()[orch.getStatus()] == Status.APPROVAL ){
+            String orchFile = orch.getId() + ".csv";
+            writeOrchToFile(orchFile,orchQueue);
+        }
+    }
+
+    public static void Log(String logID, String userID, LogLevel level,Orchestration orch)
+    {
+        Job job = new Job();//mock objects
+        Rule rule = new Rule();
+        LogEntry entry = new LogEntry(logID,userID,level,job.getId(),job,rule,orch);
+        writeToFile(entry,"");
+
+        //add entries about orch to a queue to show orch path
+        orchQueue.add(entry);
+        //when orch is ended,write it to specified orch file
+        if(orch.getStatus() == StatusCodes.SUCCESS){
             String orchFile = orch.getId() + ".csv";
             writeOrchToFile(orchFile,orchQueue);
         }

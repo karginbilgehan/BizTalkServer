@@ -14,7 +14,7 @@ public class LogEntry {
     /**
      * The status of the orchestration
      */
-    private Status orchStatus;
+    private int orchStatus;
     /**
      * The String of logID
      */
@@ -189,6 +189,8 @@ public class LogEntry {
         this.effectedID = -1;
         this.destinationIPs = job.getDestination();
         this.relatives = job.getRelatives();
+        this.jobID = job.getId();
+        this.ruleID = rule.getId();
         this.rule = rule.getRelativeResults();
         this.jobStep = Status.values()[job.getStatus() + 1];
     }
@@ -205,7 +207,7 @@ public class LogEntry {
     public LogEntry(String logID, String userID, LogLevel level, int effectedID,Job job , Rule rule , Orchestration orch) {
         this(logID,userID,level,effectedID,job,rule);
         this.orchID = orch.getId();
-        this.orchStatus = Status.values()[orch.getStatus() + 1];
+        this.orchStatus = orch.getStatus();
     }
 
     /**
@@ -296,7 +298,7 @@ public class LogEntry {
     {
         StringBuilder sb = new StringBuilder();
         sb.append(logID).append(",").append(date).append(",").append(level).append(",").append(userID).append(",").append(detail);
-        if (detail.contains("ADMIN")){
+        if (detail != null && detail.contains("ADMIN")){
             sb.append(",").append(effectedID);
         }
 
@@ -307,7 +309,7 @@ public class LogEntry {
 
         if (orchID != -1){
             sb.append(",").append(orchID).append(",").append(orchStatus);
-        }
+    }
 
         return sb.toString();
 
