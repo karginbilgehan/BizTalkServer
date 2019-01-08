@@ -10,6 +10,7 @@ import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -113,5 +114,34 @@ public class InfoService {
             System.err.println("*** Rules and jobs could not get from DB ***");
         }
         return null;
+    }
+
+    @WebMethod
+    @XmlElement(name = "getJobFromRelative")
+    public ArrayList<JobResponse> getJobsFromRelative(@WebParam(name = "relativeID") @XmlElement(required = true)
+                                                           Integer relativeId) throws Exception {
+        Set<Job> jobSet = handler.getAllJobs();
+        ArrayList<JobResponse> jobList = new ArrayList<>();
+
+        for(Job job : jobSet){
+            String relatives = job.getRelatives();
+            List<String> reList = Arrays.asList(relatives.split("\\s*,\\s*"));
+            if(reList.contains(Integer.toString(relativeId))){
+                JobResponse info = new JobResponse();
+                info.setDescription(job.getDescription());
+                info.setDestination(job.getDestination());
+                info.setFileUrl(job.getFileUrl());
+                info.setId(job.getId());
+                info.setInsertDateTime(job.getInsertDateTime_Date());
+                info.setOwner(job.getOwner());
+                info.setRelatives(job.getRelatives());
+                info.setRuleId(job.getRuleId());
+                info.setStatus(job.getStatus());
+                info.setUpdateDateTime(job.getUpdateDateTime_Date());
+                jobList.add(info);
+            }
+        }
+
+        return jobList;
     }
 }
