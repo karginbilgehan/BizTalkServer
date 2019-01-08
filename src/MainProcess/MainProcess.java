@@ -1,10 +1,14 @@
 package MainProcess;
 
+import BizTalkLog.Logger.BizLog;
+import BizTalkLog.Logger.LogLevel;
 import DB.*;
+import Services.InfoService.RulesAndJobs;
 import Services.StatusCodes;
 
 import java.io.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -67,7 +71,6 @@ public class MainProcess {
             OutputStream outputStream = conn.getOutputStream();
             //FileInputStream inputStream = new FileInputStream(filePath);
             InputStream inputStream = new URL(filePath).openStream();
-
 
             //Send main file
             byte[] buffer = new byte[4096];
@@ -160,8 +163,9 @@ public class MainProcess {
             // Eger en son joba kadar varilirsa, o job da islenir.
             if (!abnormalState) {
                 work(currentJob);
-                dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
+               // dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
                 dbHandler.updateJob(currentJobID, "Status", 100);                     //TODO ?
+             //   orchFinishLog(orchestration);
             } else {
                 dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.ERROR);  //TODO ?
             }
@@ -169,6 +173,27 @@ public class MainProcess {
             // TODO: log basacak.
             System.out.println(String.format("*** An error occured while getting orchestration from DB: %s ***", e));
         }
+    }
+
+    private static void orchFinishLog(Orchestration orchestration) throws Exception {
+        DBHandler dbHandler = new DBHandler();
+        ArrayList<RulesAndJobs> rulesAndJobs = dbHandler.getRulesAndJobs(orchestration.getId());
+        System.out.println(rulesAndJobs);
+/*        ArrayList<Job> jobList = rulesAndJobs.get(0).getJobs();
+        ArrayList<Rule> ruleList = rulesAndJobs.get(0).getRules();*/
+        /*for (int i = 0; i < jobList.size(); ++i) {
+            Job job = jobList.get(i);
+            for (int j = 0; j < ruleList.size(); ++j) {
+                Rule rule = ruleList.get(j);
+                if (job.getRuleId() == rule.getId()) {
+                    BizLog.Log("1", String.valueOf(orchestration.getOwnerID()), LogLevel.INFO,
+                            job, rule, orchestration);
+                    break;
+                }
+            }
+        }
+        dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
+        BizLog.Log("1", String.valueOf(orchestration.getOwnerID()), LogLevel.INFO,orchestration);*/
     }
 
     public static Runnable singleJobExecution(Job job) {

@@ -1,8 +1,5 @@
 package BRE;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
 import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -13,8 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class BREClient {
-
-
     private static final String REST_URI
             = "http://10.1.46.182:8080/rule";
     private static String ruleParameters = "<rule id='215'>" + "<clause>(1,2,3).(2,3,4)</clause>" + "<relatives>1,2,3,4</relatives>" + "</rule>";
@@ -25,16 +20,8 @@ public class BREClient {
             "    <rule_id>215</rule_id>\n" +
             "    <answer>t</answer>\n" +
             "</response>\n";
-    private Client client = ClientBuilder.newClient();
-    private static HttpURLConnection conn;
 
-    public Character getJsonEmployee(String rule, int ruleId, String relatives) {
-        return client
-                .target(REST_URI)
-                .path(String.valueOf(rule))
-                .request(MediaType.APPLICATION_XML)
-                .get(Character.class);
-    }
+    private static HttpURLConnection conn;
 
     public static void request(){
 
@@ -79,5 +66,11 @@ public class BREClient {
         }
     }
 
+    public static int add(String query, int ruleID, String relatives) {
+        return -1;
+    }
 
+    public static String approve(int ruleID, int relativeID, String answer) {
+        return "T";
+    }
 }
