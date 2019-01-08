@@ -57,7 +57,10 @@ public class OrchestrationService implements IOrchestrationService {
         for (RuleRequest temp : ruleRequests) {
             temp.yesEdge = JobIdList.get(temp.yesEdge);
             temp.noEdge = JobIdList.get(temp.noEdge);
-            RuleIdList.add(addRuleSub(temp));
+            temp.relativeResults = "X";
+            int ruleId = addRuleSub(temp);
+            RuleIdList.add(ruleId);
+
         }
 
         // Set the start job's id.
@@ -89,10 +92,9 @@ public class OrchestrationService implements IOrchestrationService {
                 // Update ruleId of the job.
                 dbHandler.updateJob(jobId, "RuleId", ruleId);
 
-                // Update the relative result of the rule.
-                dbHandler.updateRule(ruleId, "RelativeResult", makeXRelativeResult(workOn.getRelatives()));
-
                 Rule rule = dbHandler.getRule(ruleId);
+
+                BREClient.add(rule.getQuery(), rule.getId(), workOn.getRelatives());   // Return value kullanilmali. Return valuesu query formattan oturu hata verebilir.
 
                 BizLog.Log("1", String.valueOf(value.ownerID), LogLevel.INFO, workOn, rule, actualOrch);
             } catch (Exception e) {
@@ -122,12 +124,13 @@ public class OrchestrationService implements IOrchestrationService {
             System.out.println("addJobRule" + job.id + " Hata burada");
             return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
         }
-        rule.relativeResults = makeXRelativeResult(job.relatives);
+        rule.relativeResults = "X";
         job.ruleId =  addRuleSub(rule);
 
-        BREClient.add(rule.query, rule.id, job.relatives);   // Return value kullanilmali. Return valuesu query formattan oturu hata verebilir.
+        int ruleId = addJobSub(job);
+        BREClient.add(rule.query, ruleId, job.relatives);   // Return value kullanilmali. Return valuesu query formattan oturu hata verebilir.
 
-        return addJobSub(job) != -1 ? "Job has been added with rule successfully!" : "*** An occurred while adding job with rule ***";
+        return  ruleId != -1 ? "Job has been added with rule successfully!" : "*** An occurred while adding job with rule ***";
     }
 
     /**
@@ -182,15 +185,6 @@ public class OrchestrationService implements IOrchestrationService {
      * @return X
      */
     private String makeXRelativeResult(String relatives) {
-        List<String> resList = Arrays.asList(relatives.split("\\s*,\\s*"));
-        StringBuilder strBuilder = new StringBuilder();
-        for (int i = 0; i < resList.size();i++) {
-            if(i == resList.size() - 1) {
-                strBuilder.append("X");
-            } else {
-                strBuilder.append("X,");
-            }
-        }
-        return strBuilder.toString();
+        return "X";
     }
 }
