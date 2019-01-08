@@ -5,8 +5,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 
 public class BREClient {
-
-
     private static final String REST_URI
             = "http://localhost:8082/spring-jersey/resources/employees";
 
@@ -20,5 +18,11 @@ public class BREClient {
                 .get(Character.class);
     }
 
+    public static int add(String query, int ruleID, String relatives) {
+        return -1;
+    }
 
+    public static String approve(int ruleID, int relativeID, String answer) {
+        return "T";
+    }
 }
