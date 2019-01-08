@@ -18,12 +18,15 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.jmx.snmp.Timestamp;
 import org.apache.commons.lang3.time.StopWatch;
 
 public class MainProcess {
     private static DBHandler dbHandler = new DBHandler();
+    private final static int WAIT_TIME_SECONDS = 300;
 
     public static String createMessageFile(String message) throws IOException {
         Date date = new Date();
@@ -71,7 +74,6 @@ public class MainProcess {
             //FileInputStream inputStream = new FileInputStream(filePath);
             InputStream inputStream = new URL(filePath).openStream();
 
-
             //Send main file
             byte[] buffer = new byte[4096];
             int bytesRead = -1;
@@ -79,7 +81,6 @@ public class MainProcess {
                 outputStream.write(buffer, 0, bytesRead);
 
             }
-
 
             //Send message info
             String messageFile = createMessageFile(messages[count]);
@@ -117,10 +118,9 @@ public class MainProcess {
 
     private static char checkRule(Rule rule) {
         String relativeResults = rule.getRelativeResults();
-        List<String> resList = Arrays.asList(relativeResults.split("\\s*,\\s*"));
-        if (resList.contains("X"))
+        if (relativeResults.equals("X"))
             return 'X';
-        if (resList.contains("F"))
+        if (relativeResults.equals("F"))
             return 'F';
         return 'T';
     }
@@ -138,34 +138,38 @@ public class MainProcess {
 
                 // Jobun ruleu alinir.
                 Rule ruleOfCurrentJob = dbHandler.getRule(currentJob.getRuleId());
-                //char responseOfBRE = checkRule(ruleOfCurrentJob);
-                char responseOfBRE = 'T';
+                char responseOfBRE;
+
+                StopWatch sw = StopWatch.createStarted();
+                while ((responseOfBRE = checkRule(ruleOfCurrentJob)) == 'X' && sw.getTime(TimeUnit.SECONDS) < WAIT_TIME_SECONDS){
+                    Thread.sleep(100); // Check every 100 ms
+                }
+                sw.stop();
 
                 if (responseOfBRE == 'T') {
                     work(currentJob);
                     dbHandler.updateJob(currentJobID, "Status", StatusCodes.SUCCESS);
                     currentJobID = ruleOfCurrentJob.getYesEdge();
-                    if (currentJobID == 0) {
-                        abnormalState = true;
-                        break;
-                    }
-                    currentJob = dbHandler.getJob(currentJobID);
-                } else {
+                }
+                else{ // Not responded or False ( Bu durumda herhangi bi info vermiyoruz sanırım. ) // TODO?
                     dbHandler.updateJob(currentJobID, "Status", StatusCodes.ERROR);
                     currentJobID = ruleOfCurrentJob.getNoEdge();
-                    if (currentJobID == 0) {
-                        abnormalState = true;
-                        break;
-                    }
-                    currentJob = dbHandler.getJob(currentJobID);
                 }
+
+                if (currentJobID == 0) { // Rule END e gidecekse orchestration status u success yapmıyoruz sanırım emin miyiz? TODO?
+                    abnormalState = true;
+                    break;
+                }
+                currentJob = dbHandler.getJob(currentJobID);
+
             }
+
             // Eger en son joba kadar varilirsa, o job da islenir.
             if (!abnormalState) {
                 work(currentJob);
-               // dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
+                dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
                 dbHandler.updateJob(currentJobID, "Status", 100);                     //TODO ?
-             //   orchFinishLog(orchestration);
+                //orchFinishLog(orchestration);
             } else {
                 dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.ERROR);  //TODO ?
             }
@@ -196,92 +200,79 @@ public class MainProcess {
         BizLog.Log("1", String.valueOf(orchestration.getOwnerID()), LogLevel.INFO,orchestration);*/
     }
 
-    public static Runnable singleJobExecution() {
+    public static Runnable singleJobExecution(Job job) {
         //DBHandler dbHandlerSingle = new DBHandler();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    Job job = null;
-                    try {
-                        job = dbHandler.getJob();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if (job.getId() != 0) {
-                        // new thread
-                        try {
-                            work(job);
-                            dbHandler.updateJob(job.getId(), "Status", StatusCodes.SUCCESS);//TODO ?
-
-                        } catch (Exception e) {
-                            try {
-                                dbHandler.updateJob(job.getId(), "Status", StatusCodes.ERROR);//TODO ?
-                            } catch (Exception e1) {
-                                e1.printStackTrace();
-                            }
-                            e.printStackTrace();
-                        }
-                    } else {
-                        System.out.println("No single job waiting!");
-                    }
-                    try {
+        Runnable runnable = () -> {
+            try {
+                dbHandler.updateJob(job.getId(), "Status", StatusCodes.WORKING);//TODO ?
+                boolean canWork = true;
+                if (job.getRuleId() != 0) {
+                    Rule rule = dbHandler.getRule(job.getRuleId());
+                    StopWatch sw = StopWatch.createStarted();
+                    char response;
+                    while ((response = checkRule(rule)) == 'X' && sw.getTime(TimeUnit.SECONDS) < WAIT_TIME_SECONDS){
                         Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
-
+                    canWork = response == 'T';
                 }
+
+                if (canWork){
+                    work(job);
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.SUCCESS);
+                }
+                else {
+                    System.out.println("Not Approved job!");
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.ERROR);
+                }
+            } catch (Exception e) {
+                try {
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.ERROR);//TODO ?
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+                e.printStackTrace();
             }
         };
         return runnable;
     }
 
-    public static Runnable orchestrationExecution() throws Exception {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    Orchestration orchestration = null;
-                    try {
-                        orchestration = dbHandler.getOrchestration();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if (orchestration.getId() != 0) {
-                        // new thread
-                        try {
-                            MainProcess.orchFinishLog(orchestration);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        //          orchestrationRun(orchestration);
-                    } else {
-                        //System.out.println("No orchestration waiting!");
-                    }
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+    public static Runnable orchestrationExecution(Orchestration orchestration) throws Exception {
+        return () -> {
+            try {
+                dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.WORKING);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            orchestrationRun(orchestration);
         };
-        return runnable;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        Publish.main(null);
         try {
-            Thread jobThread = new Thread(singleJobExecution());
-            Thread orchThread = new Thread(orchestrationExecution());
-
-            orchThread.start();
-            //jobThread.start();
+            while(true){
+                Set<Orchestration> orchestrations = dbHandler.getOrchestrations();
+                if (orchestrations.size() == 0){
+                    System.out.println("No orchestrations waiting!");
+                }
+                for (Orchestration orch:
+                        orchestrations) {
+                    Thread orchThread = new Thread(orchestrationExecution(orch));
+                    orchThread.start();
+                }
+                Set<Job> jobs = dbHandler.getJobs();
+                if (orchestrations.size() == 0){
+                    System.out.println("No single jobs waiting!");
+                }
+                for (Job job:
+                        jobs) {
+                    Thread jobThread = new Thread(singleJobExecution(job));
+                    jobThread.start();
+                }
+                Thread.sleep(100);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-          Publish.main(null);
-
-
     }
 }

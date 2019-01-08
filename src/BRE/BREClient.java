@@ -1,28 +1,90 @@
 package BRE;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
+import java.io.DataOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.io.BufferedReader;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class BREClient {
-    private static final String REST_URI
-            = "http://localhost:8082/spring-jersey/resources/employees";
+    private static final String ruleUrl
+            = "http://10.1.46.182:8080/rule";
+    private static String ruleParameters = "<rule id='%d'>" + "<clause>%s</clause>" + "<relatives>%s</relatives>" + "</rule>";
+    private static final String answerUrl
+            = "http://10.1.46.182:8080/rule/answer";
+    private static String answerParameters = "<response>\n" +
+            "    <user_id>%d</user_id>\n" +
+            "    <rule_id>%d</rule_id>\n" +
+            "    <answer>%s</answer>\n" +
+            "</response>\n";
 
-    private Client client = ClientBuilder.newClient();
+    private static HttpURLConnection conn;
 
-    public Character getJsonEmployee(String rule, int ruleId, String relatives) {
-        return client
-                .target(REST_URI)
-                .path(String.valueOf(rule))
-                .request(MediaType.APPLICATION_XML)
-                .get(Character.class);
+    private static String request(String url, String urlParameters){
+        byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+        try {
+            URL myUrl = new URL(url);
+            conn = (HttpURLConnection) myUrl.openConnection();
+
+            conn.setDoOutput(true);
+            conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Content-Type", "application/xml");
+
+            try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+                wr.write(postData);
+            }
+
+            StringBuilder content;
+
+            try (BufferedReader in = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream()))) {
+
+                String line;
+                content = new StringBuilder();
+
+                while ((line = in.readLine()) != null) {
+                    content.append(line);
+                    content.append(System.lineSeparator());
+                }
+            }
+            return content.toString();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+
+            conn.disconnect();
+        }
+        return "";
     }
 
     public static int add(String query, int ruleID, String relatives) {
+        String response = request(ruleUrl, String.format(ruleParameters, ruleID, query, relatives));
+        response = response.toLowerCase();
+
+        if (response.contains("true")) {
+            return 1;
+        }
+
         return -1;
     }
 
     public static String approve(int ruleID, int relativeID, String answer) {
-        return "T";
+        String response = request(answerUrl, String.format(answerParameters, relativeID, ruleID, answer));
+        response = response.toLowerCase();
+
+        if (response.contains("t")) {
+            return "T";
+        }
+
+        if (response.contains("f")){
+            return "F";
+        }
+
+        return "X";
     }
 }

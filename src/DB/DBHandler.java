@@ -16,28 +16,42 @@ import static java.sql.Statement.RETURN_GENERATED_KEYS;
 public class DBHandler {
 
     //private String dbUrl = "jdbc:mysql://localhost:3306/biztalk?useUnicode=true&characterEncoding=utf-8";
-   //< private String dbUrl = "jdbc:mysql://51.158.72.164:3306/biztalk?useUnicode=true&characterEncoding=utf-8&useSSL=false";
+    //< private String dbUrl = "jdbc:mysql://51.158.72.164:3306/biztalk?useUnicode=true&characterEncoding=utf-8&useSSL=false";
     String dbUrl = "jdbc:mysql://localhost:3306/biztalkdb";
     private String userName = "root";
     //private String password = "dd6dfe6b993b05f305b8ac3d6773cebd7bd7af9f";
 
     private String password = "";
     private String driver = "com.mysql.jdbc.Driver";
-
-
+    private static Connection dbConnection;
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    public Connection getConnection() throws Exception {
+    public DBHandler() {
+        dbConnection = createConnection();
+    }
 
-        Class.forName(driver);
-        Connection con = DriverManager.getConnection(dbUrl,userName,password);
+
+    public Connection createConnection() {
+
+        Connection con = null;
+        try {
+            Class.forName(driver);
+
+            con = DriverManager.getConnection(dbUrl, userName, password);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return con;
     }
 
+    public Connection getConnection(){
+        return dbConnection;
+    }
+
     public void closeConnection(Connection conn) throws SQLException {
-        if (conn != null)
-            conn.close();
+//        if (conn != null)
+//            conn.close();
     }
 
     public void closePreparedStatement(PreparedStatement pst) throws SQLException {
@@ -59,7 +73,7 @@ public class DBHandler {
         preparedStmt.setInt(1, jobID);
         ResultSet rs = preparedStmt.executeQuery();
 
-        if(rs.next()) {
+        if (rs.next()) {
             job.setId(rs.getInt("JobId"));
             job.setOwner(rs.getInt("JobOwner"));
             job.setDescription(rs.getString("Description"));
@@ -90,7 +104,38 @@ public class DBHandler {
         preparedStmt.setInt(1, JobOwner);
         ResultSet rs = preparedStmt.executeQuery();
 
-        while(rs.next()) {
+        while (rs.next()) {
+            Job job = new Job();
+            job.setId(rs.getInt("JobId"));
+            job.setOwner(rs.getInt("JobOwner"));
+            job.setDestination(rs.getString("Destination"));
+            job.setFileUrl(rs.getString("FileUrl"));
+            job.setRelatives(rs.getString("Relatives"));
+            job.setStatus(rs.getInt("Status"));
+            job.setRuleId(rs.getInt("RuleId"));
+            job.setInsertDateTime(rs.getString("InsertDateTime"));
+            job.setUpdateDateTime(rs.getString("UpdateDateTime"));
+            job.setDescription(rs.getString("Description"));
+            jobs.add(job);
+        }
+
+        closePreparedStatement(preparedStmt);
+        closeResultSet(rs);
+        closeConnection(conn);
+
+        return jobs;
+    }
+
+    public Set<Job> getJobs() throws Exception {
+
+        Connection conn = getConnection();
+        Set<Job> jobs = new HashSet<Job>();
+
+        PreparedStatement preparedStmt = conn.prepareStatement("SELECT * FROM jobs WHERE Status = -1 ORDER BY InsertDateTime");
+
+        ResultSet rs = preparedStmt.executeQuery();
+
+        while (rs.next()) {
             Job job = new Job();
             job.setId(rs.getInt("JobId"));
             job.setOwner(rs.getInt("JobOwner"));
@@ -113,30 +158,30 @@ public class DBHandler {
     }
 
 
-    public int insertJob(Job job)throws Exception{
+    public int insertJob(Job job) throws Exception {
 
         Connection conn = getConnection();
         PreparedStatement preparedStmt = conn.prepareStatement(" INSERT INTO jobs ( JobOwner, Description, " +
                 "Destination, FileUrl, Relatives,Status, RuleId, InsertDateTime, UpdateDateTime)"
                 + " values ( ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        preparedStmt.setInt(1,job.getOwner());
-        preparedStmt.setString(2,job.getDescription());
-        preparedStmt.setString(3,job.getDestination());
-        preparedStmt.setString(4,job.getFileUrl());
-        preparedStmt.setString(5,job.getRelatives());
-        preparedStmt.setInt(6,job.getStatus());
-        preparedStmt.setInt(7,job.getRuleId());
-        preparedStmt.setString(8,job.getInsertDateTime());
-        preparedStmt.setString(9,job.getUpdateDateTime());
+        preparedStmt.setInt(1, job.getOwner());
+        preparedStmt.setString(2, job.getDescription());
+        preparedStmt.setString(3, job.getDestination());
+        preparedStmt.setString(4, job.getFileUrl());
+        preparedStmt.setString(5, job.getRelatives());
+        preparedStmt.setInt(6, job.getStatus());
+        preparedStmt.setInt(7, job.getRuleId());
+        preparedStmt.setString(8, job.getInsertDateTime());
+        preparedStmt.setString(9, job.getUpdateDateTime());
 
-        String query = ((JDBC4PreparedStatement)preparedStmt).asSql();
-        preparedStmt.executeUpdate(query,RETURN_GENERATED_KEYS);
+        String query = ((JDBC4PreparedStatement) preparedStmt).asSql();
+        preparedStmt.executeUpdate(query, RETURN_GENERATED_KEYS);
         ResultSet rs = preparedStmt.getGeneratedKeys();
 
         int result = -1;
 
-        if(rs.next())
+        if (rs.next())
             result = rs.getInt(1);
 
         closePreparedStatement(preparedStmt);
@@ -147,12 +192,12 @@ public class DBHandler {
     public boolean updateJob(int JobId, String columnName, int value) throws Exception {
 
         Connection conn = getConnection();
-        String sql = "UPDATE jobs SET " + columnName + " = " + value + " WHERE JobId = "+ JobId;
+        String sql = "UPDATE jobs SET " + columnName + " = " + value + " WHERE JobId = " + JobId;
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
 
         boolean bool = preparedStmt.execute();
-        updateJob(JobId,new Date());
+        updateJob(JobId, new Date());
         closePreparedStatement(preparedStmt);
         closeConnection(conn);
 
@@ -162,11 +207,11 @@ public class DBHandler {
     public boolean updateJob(int JobId, String columnName, String value) throws Exception {
 
         Connection conn = getConnection();
-        String sql = "UPDATE jobs SET " + columnName + " = " + "'"+ value + "'" + " WHERE JobId = "+ JobId;
+        String sql = "UPDATE jobs SET " + columnName + " = " + "'" + value + "'" + " WHERE JobId = " + JobId;
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
         boolean bool = preparedStmt.execute();
-        updateJob(JobId,new Date());
+        updateJob(JobId, new Date());
         closePreparedStatement(preparedStmt);
         closeConnection(conn);
 
@@ -180,8 +225,8 @@ public class DBHandler {
         Connection conn = getConnection();
         PreparedStatement preparedStmt = conn.prepareStatement("UPDATE jobs SET  UpdateDateTime = ? WHERE JobId = ?");
 
-        preparedStmt.setString(1,date);
-        preparedStmt.setInt(2,JobId);
+        preparedStmt.setString(1, date);
+        preparedStmt.setInt(2, JobId);
 
 
         boolean bool = preparedStmt.execute();
@@ -224,7 +269,7 @@ public class DBHandler {
 
         Connection conn = getConnection();
 
-        String sql = "UPDATE rules SET " + columnName + " = " + value + " WHERE RuleId = " +ruleID;
+        String sql = "UPDATE rules SET " + columnName + " = " + value + " WHERE RuleId = " + ruleID;
 
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
@@ -239,7 +284,7 @@ public class DBHandler {
 
         Connection conn = getConnection();
 
-        String sql = "UPDATE rules SET " + columnName + " = " + "'"+ value + "'" + " WHERE RuleId = "+ ruleID;
+        String sql = "UPDATE rules SET " + columnName + " = " + "'" + value + "'" + " WHERE RuleId = " + ruleID;
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
         boolean result = preparedStmt.execute();
@@ -264,8 +309,8 @@ public class DBHandler {
         preparedStmt.setInt(4, rule.getNoEdge());
         preparedStmt.setString(5, rule.getRelativeResults());
 
-        String query = ((JDBC4PreparedStatement)preparedStmt).asSql();
-        preparedStmt.executeUpdate(query,RETURN_GENERATED_KEYS);
+        String query = ((JDBC4PreparedStatement) preparedStmt).asSql();
+        preparedStmt.executeUpdate(query, RETURN_GENERATED_KEYS);
         ResultSet rs = preparedStmt.getGeneratedKeys();
 
         int result = -1;
@@ -290,8 +335,8 @@ public class DBHandler {
 
         ResultSet rs = preparedStmt.executeQuery();
 
-        if(rs.next()) {
-            OrchestrationHelper(orchestration,rs);
+        if (rs.next()) {
+            OrchestrationHelper(orchestration, rs);
         }
 
         closePreparedStatement(preparedStmt);
@@ -309,7 +354,7 @@ public class DBHandler {
 
         ResultSet rs = preparedStmt.executeQuery();
 
-        if(rs.next()) {
+        if (rs.next()) {
             job.setId(rs.getInt("JobId"));
             job.setOwner(rs.getInt("JobOwner"));
             job.setDescription(rs.getString("Description"));
@@ -339,9 +384,9 @@ public class DBHandler {
         preparedStmt.setInt(1, OrchestrationOwner);
         ResultSet rs = preparedStmt.executeQuery();
 
-        while(rs.next()) {
+        while (rs.next()) {
             Orchestration orchestration = new Orchestration();
-            OrchestrationHelper(orchestration,rs);
+            OrchestrationHelper(orchestration, rs);
             orchestrations.add(orchestration);
         }
 
@@ -352,7 +397,29 @@ public class DBHandler {
         return orchestrations;
     }
 
-    public int insertOrchestration(Orchestration orchestration)  throws Exception {
+    public Set<Orchestration> getOrchestrations() throws Exception {
+
+        Connection conn = getConnection();
+        Set<Orchestration> orchestrations = new HashSet<Orchestration>();
+
+        PreparedStatement preparedStmt = conn.prepareStatement("SELECT * FROM orchestrations WHERE Status = 0 ORDER BY InsertDateTime");
+
+        ResultSet rs = preparedStmt.executeQuery();
+
+        while (rs.next()) {
+            Orchestration orchestration = new Orchestration();
+            OrchestrationHelper(orchestration, rs);
+            orchestrations.add(orchestration);
+        }
+
+        closePreparedStatement(preparedStmt);
+        closeResultSet(rs);
+        closeConnection(conn);
+
+        return orchestrations;
+    }
+
+    public int insertOrchestration(Orchestration orchestration) throws Exception {
 
         int result = -1;
         Connection conn = getConnection();
@@ -366,8 +433,8 @@ public class DBHandler {
         preparedStmt.setString(4, orchestration.getInsertDateTime());
         preparedStmt.setString(5, orchestration.getUpdateDateTime());
 
-        String query = ((JDBC4PreparedStatement)preparedStmt).asSql();
-        preparedStmt.executeUpdate(query,RETURN_GENERATED_KEYS);
+        String query = ((JDBC4PreparedStatement) preparedStmt).asSql();
+        preparedStmt.executeUpdate(query, RETURN_GENERATED_KEYS);
         ResultSet rs = preparedStmt.getGeneratedKeys();
 
         if (rs.next())
@@ -380,16 +447,16 @@ public class DBHandler {
         return result;
     }
 
-    public boolean updateOrchestration(int orchestrationid,String columnname,int value)  throws Exception {
+    public boolean updateOrchestration(int orchestrationid, String columnname, int value) throws Exception {
 
         boolean result;
         Connection conn = getConnection();
-        String sql = "UPDATE orchestrations SET " + columnname + " = " + value + " WHERE OrchestrationId = " +orchestrationid;
+        String sql = "UPDATE orchestrations SET " + columnname + " = " + value + " WHERE OrchestrationId = " + orchestrationid;
 
         PreparedStatement preparedStmt = conn.prepareStatement(sql);
 
         result = preparedStmt.execute();
-        updateOrchestration(orchestrationid,new Date());
+        updateOrchestration(orchestrationid, new Date());
 
         closePreparedStatement(preparedStmt);
         closeConnection(conn);
@@ -397,7 +464,7 @@ public class DBHandler {
         return result;
     }
 
-    public boolean updateOrchestration(int orchestrationid, Date value)  throws Exception {
+    public boolean updateOrchestration(int orchestrationid, Date value) throws Exception {
         boolean result;
 
         Connection conn = getConnection();
@@ -429,18 +496,18 @@ public class DBHandler {
         Connection conn = getConnection();
         PreparedStatement preparedStmt = conn.prepareStatement("SELECT * FROM orchestrations WHERE OrchestrationOwner = ?");
 
-        preparedStmt.setInt(1,ownerID);
+        preparedStmt.setInt(1, ownerID);
         ResultSet rs = preparedStmt.executeQuery();
         ArrayList<RulesAndJobs> rulesAndJobsArrayList = new ArrayList<>();
 
-        while(rs.next()) {
+        while (rs.next()) {
 
             PreparedStatement preparedStmt2 = conn.prepareStatement("SELECT * FROM jobs WHERE JobId = ?");
-            preparedStmt2.setInt(1,rs.getInt("StartingJobId"));
+            preparedStmt2.setInt(1, rs.getInt("StartingJobId"));
             ResultSet rs2 = preparedStmt2.executeQuery();
 
             RulesAndJobs rulesAndJobs = new RulesAndJobs();
-            while(rs2.next()){
+            while (rs2.next()) {
 
                 Job job = new Job();
                 job.setId(rs2.getInt("JobId"));
@@ -456,10 +523,10 @@ public class DBHandler {
                 rulesAndJobs.addJob(job);
 
                 PreparedStatement preparedStmt3 = conn.prepareStatement("SELECT * FROM rules WHERE RuleId = ?");
-                preparedStmt3.setInt(1,rs2.getInt("RuleId"));
+                preparedStmt3.setInt(1, rs2.getInt("RuleId"));
                 ResultSet rs3 = preparedStmt3.executeQuery();
 
-                if(rs3.next()){
+                if (rs3.next()) {
 
                     Rule rule = new Rule();
                     rule.setId(rs3.getInt("RuleId"));
@@ -471,7 +538,7 @@ public class DBHandler {
                     rulesAndJobs.addRule(rule);
 
                     PreparedStatement preparedStmt4 = conn.prepareStatement("SELECT * FROM jobs WHERE JobId = ?");
-                    preparedStmt4.setInt(1,rs3.getInt("YesEdge"));
+                    preparedStmt4.setInt(1, rs3.getInt("YesEdge"));
                     rs2 = preparedStmt4.executeQuery();
 
                 }
@@ -484,7 +551,7 @@ public class DBHandler {
         closeResultSet(rs);
         closeConnection(conn);
 
-        return  rulesAndJobsArrayList;
+        return rulesAndJobsArrayList;
 
     }
 
