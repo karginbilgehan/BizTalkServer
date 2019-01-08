@@ -56,6 +56,7 @@ public class InfoService {
             info.setRuleId(job.getRuleId());
             info.setStatus(job.getStatus());
             info.setUpdateDateTime(job.getUpdateDateTime_Date());
+            jobList.add(info);
         }
 
         return jobList;
