@@ -1,28 +1,21 @@
 package MainProcess;
 
-import BizTalkLog.Logger.BizLog;
-import BizTalkLog.Logger.LogLevel;
-import DB.*;
+import DB.DBHandler;
+import DB.Job;
+import DB.Orchestration;
+import DB.Rule;
 import Services.InfoService.RulesAndJobs;
 import Services.StatusCodes;
+import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import com.sun.jmx.snmp.Timestamp;
-import org.apache.commons.lang3.time.StopWatch;
 
 public class MainProcess {
     private static DBHandler dbHandler = new DBHandler();
@@ -132,11 +125,12 @@ public class MainProcess {
 
             // Baslangic jobu Db'den cekilir.
             Job currentJob = dbHandler.getJob(currentJobID);
-            boolean abnormalState = false;
+            boolean noRuleState = false;
 
+            if(currentJob.getRuleId()==0) {
+                noRuleState = true;
+            }
             while (currentJob.getRuleId() != 0) {
-
-                // Jobun ruleu alinir.
                 Rule ruleOfCurrentJob = dbHandler.getRule(currentJob.getRuleId());
                 char responseOfBRE;
 
@@ -157,22 +151,23 @@ public class MainProcess {
                 }
 
                 if (currentJobID == 0) { // Rule END e gidecekse orchestration status u success yapmıyoruz sanırım emin miyiz? TODO?
-                    abnormalState = true;
                     break;
                 }
+
                 currentJob = dbHandler.getJob(currentJobID);
 
-            }
+                if(currentJob.getRuleId()==0) {
+                    noRuleState = true;
+                    break;
+                }
 
-            // Eger en son joba kadar varilirsa, o job da islenir.
-            if (!abnormalState) {
-                work(currentJob);
-                dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
-                dbHandler.updateJob(currentJobID, "Status", 100);                     //TODO ?
-                //orchFinishLog(orchestration);
-            } else {
-                dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.ERROR);  //TODO ?
             }
+            // Eger en son joba kadar varilirsa, o job da islenir.
+            if (noRuleState) {
+                work(currentJob);
+                dbHandler.updateJob(currentJobID, "Status", StatusCodes.SUCCESS);
+            }
+            dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
         } catch (Exception e) {
             // TODO: log basacak.
             System.out.println(String.format("*** An error occured while getting orchestration from DB: %s ***", e));
