@@ -10,29 +10,25 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class BREClient {
-    private static final String REST_URI
+    private static final String ruleUrl
             = "http://10.1.46.182:8080/rule";
-    private static String ruleParameters = "<rule id='215'>" + "<clause>(1,2,3).(2,3,4)</clause>" + "<relatives>1,2,3,4</relatives>" + "</rule>";
-    private static final String url
+    private static String ruleParameters = "<rule id='%d'>" + "<clause>%s</clause>" + "<relatives>%s</relatives>" + "</rule>";
+    private static final String answerUrl
             = "http://10.1.46.182:8080/rule/answer";
     private static String answerParameters = "<response>\n" +
-            "    <user_id>41</user_id>\n" +
-            "    <rule_id>215</rule_id>\n" +
-            "    <answer>t</answer>\n" +
+            "    <user_id>%d</user_id>\n" +
+            "    <rule_id>%d</rule_id>\n" +
+            "    <answer>%s</answer>\n" +
             "</response>\n";
 
     private static HttpURLConnection conn;
 
-    public static void request(){
-
-        String urlParameters = ruleParameters;
-
+    private static String request(String url, String urlParameters){
         byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
         try {
-
-            URL myurl = new URL(REST_URI);
-            conn = (HttpURLConnection) myurl.openConnection();
+            URL myUrl = new URL(url);
+            conn = (HttpURLConnection) myUrl.openConnection();
 
             conn.setDoOutput(true);
             conn.setRequestMethod("PUT");
@@ -55,8 +51,7 @@ public class BREClient {
                     content.append(System.lineSeparator());
                 }
             }
-
-            System.out.println(content.toString());
+            return content.toString();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -64,13 +59,32 @@ public class BREClient {
 
             conn.disconnect();
         }
+        return "";
     }
 
     public static int add(String query, int ruleID, String relatives) {
+        String response = request(ruleUrl, String.format(ruleParameters, ruleID, query, relatives));
+        response = response.toLowerCase();
+
+        if (response.contains("true")) {
+            return 1;
+        }
+
         return -1;
     }
 
     public static String approve(int ruleID, int relativeID, String answer) {
-        return "T";
+        String response = request(answerUrl, String.format(answerParameters, relativeID, ruleID, answer));
+        response = response.toLowerCase();
+
+        if (response.contains("t")) {
+            return "T";
+        }
+
+        if (response.contains("f")){
+            return "F";
+        }
+
+        return "X";
     }
 }
