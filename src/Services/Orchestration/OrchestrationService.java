@@ -117,11 +117,11 @@ public class OrchestrationService implements IOrchestrationService {
     public String addJobRule(JobRequest job, RuleRequest rule) {
         if (job.id == 0)
             return "*** An occurred while adding job ***";
+        job.id = -1;
         if (job.ruleId == 0) {
             System.out.println("addJobRule" + job.id + " Hata burada");
             return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
         }
-        job.id = -1;
         rule.relativeResults = makeXRelativeResult(job.relatives);
         job.ruleId =  addRuleSub(rule);
 

@@ -19,12 +19,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.jmx.snmp.Timestamp;
 import org.apache.commons.lang3.time.StopWatch;
 
 public class MainProcess {
     private static DBHandler dbHandler = new DBHandler();
+    private final static int WAIT_TIME_SECONDS = 300;
 
     public static String createMessageFile(String message) throws IOException {
         Date date = new Date();
@@ -80,7 +82,6 @@ public class MainProcess {
 
             }
 
-
             //Send message info
             String messageFile = createMessageFile(messages[count]);
             String messagePath = Paths.get("temp\\" + messageFile + ".message").toString();
@@ -117,10 +118,9 @@ public class MainProcess {
 
     private static char checkRule(Rule rule) {
         String relativeResults = rule.getRelativeResults();
-        List<String> resList = Arrays.asList(relativeResults.split("\\s*,\\s*"));
-        if (resList.contains("X"))
+        if (relativeResults.equals("X"))
             return 'X';
-        if (resList.contains("F"))
+        if (relativeResults.equals("F"))
             return 'F';
         return 'T';
     }
@@ -138,34 +138,38 @@ public class MainProcess {
 
                 // Jobun ruleu alinir.
                 Rule ruleOfCurrentJob = dbHandler.getRule(currentJob.getRuleId());
-                //char responseOfBRE = checkRule(ruleOfCurrentJob);
-                char responseOfBRE = 'T';
+                char responseOfBRE;
+
+                StopWatch sw = StopWatch.createStarted();
+                while ((responseOfBRE = checkRule(ruleOfCurrentJob)) == 'X' && sw.getTime(TimeUnit.SECONDS) < WAIT_TIME_SECONDS){
+                    Thread.sleep(100); // Check every 100 ms
+                }
+                sw.stop();
 
                 if (responseOfBRE == 'T') {
                     work(currentJob);
                     dbHandler.updateJob(currentJobID, "Status", StatusCodes.SUCCESS);
                     currentJobID = ruleOfCurrentJob.getYesEdge();
-                    if (currentJobID == 0) {
-                        abnormalState = true;
-                        break;
-                    }
-                    currentJob = dbHandler.getJob(currentJobID);
-                } else {
+                }
+                else{ // Not responded or False ( Bu durumda herhangi bi info vermiyoruz sanırım. ) // TODO?
                     dbHandler.updateJob(currentJobID, "Status", StatusCodes.ERROR);
                     currentJobID = ruleOfCurrentJob.getNoEdge();
-                    if (currentJobID == 0) {
-                        abnormalState = true;
-                        break;
-                    }
-                    currentJob = dbHandler.getJob(currentJobID);
                 }
+
+                if (currentJobID == 0) { // Rule END e gidecekse orchestration status u success yapmıyoruz sanırım emin miyiz? TODO?
+                    abnormalState = true;
+                    break;
+                }
+                currentJob = dbHandler.getJob(currentJobID);
+
             }
+
             // Eger en son joba kadar varilirsa, o job da islenir.
             if (!abnormalState) {
                 work(currentJob);
-               // dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
+                dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.SUCCESS);  //TODO ?
                 dbHandler.updateJob(currentJobID, "Status", 100);                     //TODO ?
-             //   orchFinishLog(orchestration);
+                //orchFinishLog(orchestration);
             } else {
                 dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.ERROR);  //TODO ?
             }
@@ -198,29 +202,42 @@ public class MainProcess {
 
     public static Runnable singleJobExecution(Job job) {
         //DBHandler dbHandlerSingle = new DBHandler();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.WORKING);//TODO ?
-                    work(job);
-                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.SUCCESS);//TODO ?
-
-                } catch (Exception e) {
-                    try {
-                        dbHandler.updateJob(job.getId(), "Status", StatusCodes.ERROR);//TODO ?
-                    } catch (Exception e1) {
-                        e1.printStackTrace();
+        Runnable runnable = () -> {
+            try {
+                dbHandler.updateJob(job.getId(), "Status", StatusCodes.WORKING);//TODO ?
+                boolean canWork = true;
+                if (job.getRuleId() != 0) {
+                    Rule rule = dbHandler.getRule(job.getRuleId());
+                    StopWatch sw = StopWatch.createStarted();
+                    char response;
+                    while ((response = checkRule(rule)) == 'X' && sw.getTime(TimeUnit.SECONDS) < WAIT_TIME_SECONDS){
+                        Thread.sleep(100);
                     }
-                    e.printStackTrace();
+                    canWork = response == 'T';
                 }
+
+                if (canWork){
+                    work(job);
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.SUCCESS);
+                }
+                else {
+                    System.out.println("Not Approved job!");
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.ERROR);
+                }
+            } catch (Exception e) {
+                try {
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.ERROR);//TODO ?
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+                e.printStackTrace();
             }
         };
         return runnable;
     }
 
     public static Runnable orchestrationExecution(Orchestration orchestration) throws Exception {
-        Runnable runnable = () -> {
+        return () -> {
             try {
                 dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.WORKING);
             } catch (Exception e) {
@@ -228,10 +245,9 @@ public class MainProcess {
             }
             orchestrationRun(orchestration);
         };
-        return runnable;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         Publish.main(null);
         try {
             while(true){
@@ -253,7 +269,7 @@ public class MainProcess {
                     Thread jobThread = new Thread(singleJobExecution(job));
                     jobThread.start();
                 }
-                Thread.sleep(500);
+                Thread.sleep(100);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
