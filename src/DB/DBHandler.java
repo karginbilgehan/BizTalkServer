@@ -94,6 +94,36 @@ public class DBHandler {
 
     }
 
+    public Set<Job> getAllJobs() throws Exception {
+
+        Connection conn = getConnection();
+        Set<Job> jobs = new HashSet<>();
+
+        PreparedStatement preparedStmt = conn.prepareStatement("SELECT * FROM jobs");
+        ResultSet rs = preparedStmt.executeQuery();
+
+        while (rs.next()) {
+            Job job = new Job();
+            job.setId(rs.getInt("JobId"));
+            job.setOwner(rs.getInt("JobOwner"));
+            job.setDestination(rs.getString("Destination"));
+            job.setFileUrl(rs.getString("FileUrl"));
+            job.setRelatives(rs.getString("Relatives"));
+            job.setStatus(rs.getInt("Status"));
+            job.setRuleId(rs.getInt("RuleId"));
+            job.setInsertDateTime(rs.getString("InsertDateTime"));
+            job.setUpdateDateTime(rs.getString("UpdateDateTime"));
+            job.setDescription(rs.getString("Description"));
+            jobs.add(job);
+        }
+
+        closePreparedStatement(preparedStmt);
+        closeResultSet(rs);
+        closeConnection(conn);
+
+        return jobs;
+    }
+
     public Set<Job> getJobSet(int JobOwner) throws Exception {
 
         Connection conn = getConnection();
