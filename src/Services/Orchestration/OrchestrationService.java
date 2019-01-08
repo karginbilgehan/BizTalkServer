@@ -106,7 +106,7 @@ public class OrchestrationService implements IOrchestrationService {
             System.out.println("addJobRule" + job.id + " Hata burada");
             return addJobSub(job) != -1 ? "Job has been added successfully!" : "*** An occurred while adding job ***";
         }
-
+        job.id = -1;
         rule.relativeResults = makeXRelativeResult(job.relatives);
         job.ruleId =  addRuleSub(rule);
         return addJobSub(job) != -1 ? "Job has been added with rule successfully!" : "*** An occurred while adding job with rule ***";
@@ -121,6 +121,9 @@ public class OrchestrationService implements IOrchestrationService {
         int dbJobId;
 
         Job actualJob = new Job(value.owner, value.description, value.destination, value.fileUrl, value.relatives, 0, value.ruleId);
+        if (value.id == -1){
+            actualJob.setStatus(StatusCodes.SINGLE_INITIAL_JOB);
+        }
         try {
             dbJobId = dbHandler.insertJob(actualJob);
         } catch (Exception e) {

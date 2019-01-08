@@ -14,6 +14,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Set;
 
 import com.sun.jmx.snmp.Timestamp;
 import org.apache.commons.lang3.time.StopWatch;
@@ -60,59 +61,55 @@ public class MainProcess {
 
             ftpUrl = String.format(ftpUrlStart, user, pass, host, fileName);
             System.out.println("Upload URL: " + ftpUrl);
-            try {
-                URL url = new URL(ftpUrl);
-                URLConnection conn = url.openConnection();
-                OutputStream outputStream = conn.getOutputStream();
-                //FileInputStream inputStream = new FileInputStream(filePath);
-                InputStream inputStream = new URL(filePath).openStream();
+
+            URL url = new URL(ftpUrl);
+            URLConnection conn = url.openConnection();
+            OutputStream outputStream = conn.getOutputStream();
+            //FileInputStream inputStream = new FileInputStream(filePath);
+            InputStream inputStream = new URL(filePath).openStream();
 
 
-                //Send main file
-                byte[] buffer = new byte[4096];
-                int bytesRead = -1;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
+            //Send main file
+            byte[] buffer = new byte[4096];
+            int bytesRead = -1;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
 
-                }
-
-
-                //Send message info
-                String messageFile = createMessageFile(messages[count]);
-                String messagePath = Paths.get("temp\\"+messageFile+".message").toString();
-                System.out.println("local file url:" + messagePath);
-
-                String ftpUrlMessage = String.format(ftpUrlStart, user, pass, host,fileName+".message");
-                System.out.println("Upload URL: " + ftpUrlMessage);
-                url = new URL(ftpUrlMessage);
-                conn = url.openConnection();
-                OutputStream outputStreamMessage = conn.getOutputStream();
-                FileInputStream inputStreamMessage = new FileInputStream(messagePath);
-                buffer = new byte[4096];
-
-                while ((bytesRead = inputStreamMessage.read(buffer)) != -1) {
-
-                    outputStreamMessage.write(buffer, 0, bytesRead);
-
-                }
-                inputStreamMessage.close();
-                outputStreamMessage.close();
-                inputStream.close();
-                outputStream.close();
-
-                File deleteFile = new File(messagePath);
-                if(deleteFile.delete()){
-                    System.out.println("tmp/file.txt File deleted from Project root directory");
-                }else System.out.println("File tmp/file.txt doesn't exists in project root directory");
-
-
-
-                System.out.println("File uploaded");
-            } catch (IOException ex) {
-                ex.printStackTrace();
             }
+
+
+            //Send message info
+            String messageFile = createMessageFile(messages[count]);
+            String messagePath = Paths.get("temp\\" + messageFile + ".message").toString();
+            System.out.println("local file url:" + messagePath);
+
+            String ftpUrlMessage = String.format(ftpUrlStart, user, pass, host, fileName + ".message");
+            System.out.println("Upload URL: " + ftpUrlMessage);
+            url = new URL(ftpUrlMessage);
+            conn = url.openConnection();
+            OutputStream outputStreamMessage = conn.getOutputStream();
+            FileInputStream inputStreamMessage = new FileInputStream(messagePath);
+            buffer = new byte[4096];
+
+            while ((bytesRead = inputStreamMessage.read(buffer)) != -1) {
+
+                outputStreamMessage.write(buffer, 0, bytesRead);
+
+            }
+            inputStreamMessage.close();
+            outputStreamMessage.close();
+            inputStream.close();
+            outputStream.close();
+
+            File deleteFile = new File(messagePath);
+            if (deleteFile.delete()) {
+                System.out.println("tmp/file.txt File deleted from Project root directory");
+            } else System.out.println("File tmp/file.txt doesn't exists in project root directory");
+
+            System.out.println("File uploaded");
             ++count;
         }
+
     }
 
     private static char checkRule(Rule rule) {
@@ -174,72 +171,67 @@ public class MainProcess {
         }
     }
 
-    public static Runnable singleJobExecution(){
-        DBHandler dbHandlerSingle = new DBHandler();
+    public static Runnable singleJobExecution(Job job) {
+        //DBHandler dbHandlerSingle = new DBHandler();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                while(true){
-                    Job job = null;
-                    try {
-                        job = dbHandlerSingle.getJob();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if (job.getId() != 0) {
-                        // new thread
-                        try {
-                            work(job);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        System.out.println("No single job waiting!");
-                    }
+                try {
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.WORKING);//TODO ?
+                    work(job);
+                    dbHandler.updateJob(job.getId(), "Status", StatusCodes.SUCCESS);//TODO ?
 
+                } catch (Exception e) {
+                    try {
+                        dbHandler.updateJob(job.getId(), "Status", StatusCodes.ERROR);//TODO ?
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                    e.printStackTrace();
                 }
             }
         };
         return runnable;
     }
 
-    public static  Runnable orchestrationExecution() throws Exception{
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    Orchestration orchestration = null;
-                    try {
-                        orchestration = dbHandler.getOrchestration();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if (orchestration.getId() != 0) {
-                        // new thread
-                        orchestrationRun(orchestration);
-                    } else {
-                        System.out.println("No orchestration waiting!");
-                    }
-
-                }
+    public static Runnable orchestrationExecution(Orchestration orchestration) throws Exception {
+        Runnable runnable = () -> {
+            try {
+                dbHandler.updateOrchestration(orchestration.getId(), "Status", StatusCodes.WORKING);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            orchestrationRun(orchestration);
         };
         return runnable;
     }
 
     public static void main(String[] args) throws Exception {
-        try{
-            Thread jobThread = new Thread(singleJobExecution());
-            Thread orchThread = new Thread(orchestrationExecution());
-
-            orchThread.start();
-            jobThread.start();
-        }
-        catch (Exception ex){
+        Publish.main(null);
+        try {
+            while(true){
+                Set<Orchestration> orchestrations = dbHandler.getOrchestrations();
+                if (orchestrations.size() == 0){
+                    System.out.println("No orchestrations waiting!");
+                }
+                for (Orchestration orch:
+                        orchestrations) {
+                    Thread orchThread = new Thread(orchestrationExecution(orch));
+                    orchThread.start();
+                }
+                Set<Job> jobs = dbHandler.getJobs();
+                if (orchestrations.size() == 0){
+                    System.out.println("No single jobs waiting!");
+                }
+                for (Job job:
+                        jobs) {
+                    Thread jobThread = new Thread(singleJobExecution(job));
+                    jobThread.start();
+                }
+                Thread.sleep(500);
+            }
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
-        //  Publish.main(null);
-
-
     }
 }
