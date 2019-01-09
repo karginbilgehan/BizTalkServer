@@ -233,7 +233,6 @@ public class MainProcess {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println("a,b,c".replaceAll(",","|"));
         Publish.main(null);
         Orchestration orchestration = dbHandler.getOrchestration();
         System.out.println(orchestration.getOwnerID());
