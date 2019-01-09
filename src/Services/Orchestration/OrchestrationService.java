@@ -2,7 +2,6 @@ package Services.Orchestration;
 
 import javax.jws.WebService;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import BRE.BREClient;
@@ -11,8 +10,6 @@ import BizTalkLog.Logger.LogLevel;
 import DB.*;
 import Services.Orchestration.Requests.*;
 import Services.StatusCodes;
-import com.sun.jmx.snmp.agent.SnmpUserDataFactory;
-import com.sun.org.apache.xpath.internal.operations.Or;
 
 @WebService(endpointInterface = "Services.Orchestration.IOrchestrationService",
         serviceName = "OrchestrationService")
@@ -134,6 +131,23 @@ public class OrchestrationService implements IOrchestrationService {
     }
 
     /**
+     * Remove job and rule, If rule exists.
+     *
+     * @param jobID  ID of Job to be added.
+     * @return Message
+     */
+    @Override
+    public String removeJob(int jobID) {
+        try {
+            Job job = dbHandler.getJob(jobID);
+            job.setStatus(StatusCodes.REMOVED);
+        } catch (Exception e) {
+            return "*** An occurred while removing job ***";
+        }
+        return String.format("*** Job has just been removed! (ID: %d) ***", jobID);
+    }
+
+    /**
      * Add given job to database.
      * @param value DB.JobRequest to be added to database.
      * @return If added, returns job id which is got from db, otherwise -1 to indicate an error.
@@ -187,4 +201,5 @@ public class OrchestrationService implements IOrchestrationService {
     private String makeXRelativeResult(String relatives) {
         return "X";
     }
+    
 }
