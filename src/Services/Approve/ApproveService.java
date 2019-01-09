@@ -34,8 +34,6 @@ public class ApproveService {
     }
     //job tablosundan ruleid ye ulasip oradan rule tablosuna erisiyoruz.
     int ruleId = job.getRuleId();
-
-
     String newRelative = BREClient.approve(ruleId, relativeId, userApp);
 
     //En son olarak rule tablosunu guncelledim.
@@ -44,7 +42,7 @@ public class ApproveService {
     } catch (Exception e) {
       e.printStackTrace();
     }
-
+    System.out.println(ra.getRelativeId() + ra.getUserApprove());
     return "update relative";
   }
 

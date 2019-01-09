@@ -256,7 +256,7 @@ public class MainProcess {
                     orchThread.start();
                 }
                 Set<Job> jobs = dbHandler.getJobs();
-                if (orchestrations.size() == 0){
+                if (jobs.size() == 0){
                     System.out.println("No single jobs waiting!");
                 }
                 for (Job job:
