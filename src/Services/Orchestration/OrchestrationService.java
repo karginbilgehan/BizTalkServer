@@ -140,7 +140,9 @@ public class OrchestrationService implements IOrchestrationService {
     public String removeJob(int jobID) {
         try {
             Job job = dbHandler.getJob(jobID);
-            job.setStatus(StatusCodes.REMOVED);
+            if (job.getStatus() == StatusCodes.REMOVED)
+                return "Job has already been removed!";
+            dbHandler.updateJob(jobID, "Status", StatusCodes.REMOVED);
         } catch (Exception e) {
             return "*** An error occurred while removing job ***";
         }
