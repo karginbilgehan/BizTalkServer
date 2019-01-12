@@ -43,10 +43,11 @@ public interface IOrchestrationService {
     /**
      * Remove job and rule, If rule exists.
      *
-     * @param jobID  ID of Job to be added.
+     * @param jobID ID of Job to be added.
      * @return Message
      */
     @WebMethod(action = "remove_job", operationName = "removeJob")
     @WebResult(name = "message")
     String removeJob(@WebParam(name = "jobID") @XmlElement(required = true) int jobID);
+
 }

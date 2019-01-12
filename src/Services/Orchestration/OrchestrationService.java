@@ -52,7 +52,6 @@ public class OrchestrationService implements IOrchestrationService {
         // creating edges between ruleRequests declared from gui.
         // adding DB.RuleRequest id's to the RuleIdList.
         for (RuleRequest temp : ruleRequests) {
-            System.out.println(temp.yesEdge + " " + JobIdList.get(temp.yesEdge));
             temp.yesEdge = JobIdList.get(temp.yesEdge);
             temp.noEdge = JobIdList.get(temp.noEdge);
             temp.relativeResults = "X";
@@ -116,7 +115,7 @@ public class OrchestrationService implements IOrchestrationService {
     @Override
     public String addJobRule(JobRequest job, RuleRequest rule) {
         if (job.id == 0)
-            return "*** An occurred while adding job ***";
+            return "*** An error occurred while adding job ***";
         job.id = -1;
         if (job.ruleId == 0) {
             System.out.println("addJobRule" + job.id + " Hata burada");
@@ -143,7 +142,7 @@ public class OrchestrationService implements IOrchestrationService {
             Job job = dbHandler.getJob(jobID);
             job.setStatus(StatusCodes.REMOVED);
         } catch (Exception e) {
-            return "*** An occurred while removing job ***";
+            return "*** An error occurred while removing job ***";
         }
         return String.format("*** Job has just been removed! (ID: %d) ***", jobID);
     }
@@ -191,16 +190,6 @@ public class OrchestrationService implements IOrchestrationService {
         actualRule.setId(dbRuleId);
         System.out.println("addRuleSub: " + value.id);
         return dbRuleId;
-    }
-
-    /**
-     * Make X relative result.
-     *
-     * @param relatives Relatives.
-     * @return X
-     */
-    private String makeXRelativeResult(String relatives) {
-        return "X";
     }
     
 }
