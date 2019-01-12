@@ -87,17 +87,16 @@ public class InfoService {
 
     @WebMethod
     @XmlElement(name = "getRule")
-    public RuleResponse getRule(@WebParam(name = "ruleID") @XmlElement(required = true)
-                                            Integer ruleId) throws Exception {
+    public RuleResponse getRule(@WebParam(name = "ruleID") @XmlElement(required = true)Integer ruleId) throws Exception {
         Rule rule = handler.getRule(ruleId.intValue());
         RuleResponse info = new RuleResponse();
 
         info.setId(rule.getId());
         info.setNoEdge(rule.getNoEdge());
         info.setOwnerID(rule.getOwnerID());
-        rule.setQuery(rule.getQuery());
-        rule.setRelativeResults(rule.getRelativeResults());
-        rule.setYesEdge(rule.getYesEdge());
+        info.setQuery(rule.getQuery());
+        info.setRelativeResults(rule.getRelativeResults());
+        info.setYesEdge(rule.getYesEdge());
 
         return info;
     }

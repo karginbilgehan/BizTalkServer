@@ -52,6 +52,7 @@ public class OrchestrationService implements IOrchestrationService {
         // creating edges between ruleRequests declared from gui.
         // adding DB.RuleRequest id's to the RuleIdList.
         for (RuleRequest temp : ruleRequests) {
+            System.out.println(temp.yesEdge + " " + JobIdList.get(temp.yesEdge));
             temp.yesEdge = JobIdList.get(temp.yesEdge);
             temp.noEdge = JobIdList.get(temp.noEdge);
             temp.relativeResults = "X";
@@ -83,8 +84,8 @@ public class OrchestrationService implements IOrchestrationService {
                 return String.format("*** Error to access given id (job): %d***", jobId);
             }
 
-            int ruleId = RuleIdList.get(workOn.getRuleId());
-            workOn.setRuleId(ruleId);
+            int ruleId = RuleIdList.get(workOn.getRuleId()); // BURADA NE OLUYOR
+            workOn.setRuleId(ruleId); // BURADA NE OLUYOR
             try {
                 // Update ruleId of the job.
                 dbHandler.updateJob(jobId, "RuleId", ruleId);
